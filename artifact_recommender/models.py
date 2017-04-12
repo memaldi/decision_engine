@@ -3,11 +3,13 @@ from django.db import models
 # Create your models here.
 
 
-class Artifact(models.Model):
-    lang = models.CharField(max_length=20)
+class Tag(models.Model):
+    name = models.CharField(max_length=100, null=False, blank=False)
 
-    class Meta:
-        abstract = True
+
+class Artifact(models.Model):
+    lang = models.CharField(max_length=20, null=False, blank=False)
+    tags = models.ManyToManyField(Tag)
 
 
 class Dataset(Artifact):
@@ -20,6 +22,20 @@ class BuildingBlock(Artifact):
 
 class Application(Artifact):
     scope = models.CharField(max_length=20)
-    lat = models.FloatField()
-    lon = models.FloatField()
-    min_age = models.IntegerField()
+    lat = models.FloatField(null=True)
+    lon = models.FloatField(null=True)
+    min_age = models.IntegerField(null=True)
+
+
+class Idea(Artifact):
+    pass
+
+
+class Similarity(models.Model):
+    source_artifact = models.ForeignKey('Artifact',
+                                        related_name='source_artifact',
+                                        on_delete=models.CASCADE)
+    target_artifact = models.ForeignKey('Artifact',
+                                        related_name='target_artifact',
+                                        on_delete=models.CASCADE)
+    value = models.FloatField(null=False)
