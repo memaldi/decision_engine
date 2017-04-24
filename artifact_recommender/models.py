@@ -8,6 +8,7 @@ class Tag(models.Model):
 
 
 class Artifact(models.Model):
+    id = models.IntegerField(primary_key=True)
     lang = models.CharField(max_length=20, null=False, blank=False)
     tags = models.ManyToManyField(Tag)
 
