@@ -131,8 +131,8 @@ class BuildingBlockDetail(APIView):
 class ApplicationList(APIView):
     def get(self, request, format=None):
         apps = Application.objects.all()
-        serializer = serializers.BuildingBlockSerializer(apps,
-                                                         many=True)
+        serializer = serializers.ApplicationSerializer(apps,
+                                                       many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
@@ -162,7 +162,7 @@ class ApplicationDetail(APIView):
 
     def get(self, request, pk, format=None):
         application = self.get_object(pk)
-        serializer = serializers.BuildingBlockSerializer(application)
+        serializer = serializers.ApplicationSerializer(application)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
@@ -173,8 +173,8 @@ class ApplicationDetail(APIView):
             except Tag.DoesNotExist:
                 tag = Tag(name=tag_name)
                 tag.save()
-        serializer = serializers.BuildingBlockSerializer(application,
-                                                         data=request.data)
+        serializer = serializers.ApplicationSerializer(application,
+                                                       data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
