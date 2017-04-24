@@ -6,5 +6,7 @@ urlpatterns = [
     url(r'^dataset/(?P<pk>[0-9]+)/$', views.DatasetDetail.as_view()),
     url(r'^buildingblock/$', views.BuildingBlockList.as_view()),
     url(r'^buildingblock/(?P<pk>[0-9]+)/$',
-        views.BuildingBlocktDetail.as_view()),
+        views.BuildingBlockDetail.as_view()),
+    url(r'^app/$', views.ApplicationList.as_view()),
+    url(r'^app/(?P<pk>[0-9]+)/$', views.ApplicationDetail.as_view()),
 ]

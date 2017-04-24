@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from artifact_recommender.models import Dataset, Tag, BuildingBlock
+from artifact_recommender.models import Application
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -24,3 +25,12 @@ class BuildingBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuildingBlock
         fields = ('id', 'lang', 'tags')
+
+
+class ApplicationSerializer(serializers.ModelSerializer):
+    tags = serializers.SlugRelatedField(many=True, slug_field='name',
+                                        queryset=Tag.objects.all())
+
+    class Meta:
+        model = Application
+        fields = ('id', 'lang', 'tags', 'scope', 'min_age')

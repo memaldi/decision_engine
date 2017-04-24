@@ -1,4 +1,5 @@
 from artifact_recommender.models import Dataset, Tag, BuildingBlock
+from artifact_recommender.models import Application
 from artifact_recommender import serializers
 from django.http import Http404
 from django.db import transaction
@@ -88,7 +89,7 @@ class BuildingBlockList(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class BuildingBlocktDetail(APIView):
+class BuildingBlockDetail(APIView):
     def get_object(self, pk):
         try:
             return BuildingBlock.objects.get(pk=pk)
@@ -118,4 +119,61 @@ class BuildingBlocktDetail(APIView):
     def delete(self, request, pk, format=None):
         building_block = self.get_object(pk)
         building_block.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ApplicationList(APIView):
+    def get(self, request, format=None):
+        apps = Application.objects.all()
+        serializer = serializers.BuildingBlockSerializer(apps,
+                                                         many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        with transaction.atomic():
+            for tag_name in request.data['tags']:
+                try:
+                    tag = Tag.objects.get(name=tag_name)
+                except Tag.DoesNotExist:
+                    tag = Tag(name=tag_name)
+                    tag.save()
+            serializer = serializers.ApplicationSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApplicationDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Application.objects.get(pk=pk)
+        except Application.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        application = self.get_object(pk)
+        serializer = serializers.BuildingBlockSerializer(application)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        application = self.get_object(pk)
+        for tag_name in request.data['tags']:
+            try:
+                Tag.objects.get(name=tag_name)
+            except Tag.DoesNotExist:
+                tag = Tag(name=tag_name)
+                tag.save()
+        serializer = serializers.BuildingBlockSerializer(application,
+                                                         data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        application = self.get_object(pk)
+        application.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

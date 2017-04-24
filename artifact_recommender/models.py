@@ -23,8 +23,6 @@ class BuildingBlock(Artifact):
 
 class Application(Artifact):
     scope = models.CharField(max_length=20)
-    lat = models.FloatField(null=True)
-    lon = models.FloatField(null=True)
     min_age = models.IntegerField(null=True)
 
 
