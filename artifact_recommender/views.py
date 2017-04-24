@@ -17,22 +17,19 @@ class DatasetList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            tags = []
             for tag_name in request.data['tags']:
                 try:
                     tag = Tag.objects.get(name=tag_name)
                 except Tag.DoesNotExist:
                     tag = Tag(name=tag_name)
                     tag.save()
-                tags.append(tag)
-
-            dataset = Dataset(id=request.data['id'], lang=request.data['lang'])
-            dataset.save()
-            dataset.tags = tags
-            dataset.save()
-            serializer = DatasetSerializer(dataset)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+            serializer = DatasetSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class DatasetDetail(APIView):
@@ -46,3 +43,17 @@ class DatasetDetail(APIView):
         dataset = self.get_object(pk)
         serializer = DatasetSerializer(dataset)
         return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        dataset = self.get_object(pk)
+        for tag_name in request.data['tags']:
+            try:
+                Tag.objects.get(name=tag_name)
+            except Tag.DoesNotExist:
+                tag = Tag(name=tag_name)
+                tag.save()
+        serializer = DatasetSerializer(dataset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
