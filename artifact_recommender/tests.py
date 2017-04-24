@@ -195,69 +195,183 @@ class BuildingBlockTestCase(TestCase):
 
 class DatasetTestCase(TestCase):
     def setUp(self):
-        self.tag1 = Tag.objects.create(name='tag1')
-        self.tag2 = Tag.objects.create(name='tag2')
-        self.tag3 = Tag.objects.create(name='tag3')
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        self.client = Client()
+
+    def test_create_dataset_anon(self):
+        response = self.client.post('/dataset/',
+                                    json.dumps({'id': 4444,
+                                                'lang': 'spanish',
+                                                'tags': ['tag1', 'tag2']}),
+                                    content_type='application/json')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(Dataset.objects.count(), 0)
 
     def test_create_dataset(self):
-        three_tag_list = [self.tag1, self.tag2, self.tag3]
-        dataset = Dataset.objects.create(id=4444, lang='spanish')
-        dataset.tags = three_tag_list
-        dataset.save()
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
 
-        dataset = Dataset.objects.last()
-
-        self.assertListEqual(list(dataset.tags.all()), three_tag_list)
-        self.assertEqual(dataset.lang, 'spanish')
-        self.assertEqual(dataset.id, 4444)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
 
-        two_tag_list = [self.tag1, self.tag2]
-        dataset = Dataset.objects.create(id=5555, lang='spanish')
-        dataset.tags = two_tag_list
-        dataset.save()
+    def test_update_dataset_anon(self):
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
 
-        dataset = Dataset.objects.last()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Dataset.objects.count(), 1)
 
-        self.assertListEqual(list(dataset.tags.all()), two_tag_list)
+        response = self.client.put(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'italian',
+                        'tags': ['tag3', 'tag4']}),
+            content_type='application/json')
+
+        self.assertEqual(response.status_code, 401)
+
+        dataset = Dataset.objects.first()
         self.assertEqual(dataset.lang, 'spanish')
-        self.assertEqual(dataset.id, 5555)
-        self.assertEqual(Dataset.objects.count(), 2)
+        tags = []
+        for tag in dataset.tags.all():
+            tags.append(tag.name)
+        self.assertListEqual(tags, ['tag1', 'tag2'])
 
     def test_update_dataset(self):
-        three_tag_list = [self.tag1, self.tag2, self.tag3]
-        two_tag_list = [self.tag1, self.tag2]
-        dataset = Dataset.objects.create(id=4444, lang='spanish')
-        dataset.tags = three_tag_list
-        dataset.save()
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
 
-        dataset = Dataset.objects.last()
-
-        self.assertListEqual(list(dataset.tags.all()), three_tag_list)
-        self.assertEqual(dataset.lang, 'spanish')
-        self.assertEqual(dataset.id, 4444)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
 
-        dataset.lang = 'italian'
-        dataset.tags = two_tag_list
-        dataset.save()
+        response = self.client.put(
+            '/dataset/4444/',
+            json.dumps({'id': 4444,
+                        'lang': 'italian',
+                        'tags': ['tag3', 'tag4']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
 
-        dataset = Dataset.objects.last()
+        self.assertEqual(response.status_code, 200)
 
-        self.assertListEqual(list(dataset.tags.all()), two_tag_list)
+        dataset = Dataset.objects.first()
         self.assertEqual(dataset.lang, 'italian')
-        self.assertEqual(dataset.id, 4444)
+        tags = []
+        for tag in dataset.tags.all():
+            tags.append(tag.name)
+        self.assertListEqual(tags, ['tag3', 'tag4'])
+
+    def test_delete_dataset_anon(self):
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Dataset.objects.count(), 1)
+
+        response = self.client.delete('/dataset/4444/')
+
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(Dataset.objects.count(), 1)
 
     def test_delete_dataset(self):
-        three_tag_list = [self.tag1, self.tag2, self.tag3]
-        dataset = Dataset.objects.create(id=4444, lang='spanish')
-        dataset.tags = three_tag_list
-        dataset.save()
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
 
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
 
-        dataset = Dataset.objects.last()
-        dataset.delete()
+        response = self.client.delete(
+            '/dataset/4444/',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
 
+        self.assertEqual(response.status_code, 204)
         self.assertEqual(Dataset.objects.count(), 0)
+
+    def test_get_dataset(self):
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Dataset.objects.count(), 1)
+
+        response = self.client.get('/dataset/')
+
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 1)
+
+    def test_get_dataset(self):
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Dataset.objects.count(), 1)
+
+        response = self.client.get('/dataset/4444/')
+
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['id'], 4444)
+        self.assertEqual(response_json['lang'], 'spanish')
+        self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
