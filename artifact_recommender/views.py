@@ -6,10 +6,12 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.decorators import permission_classes
 # Create your views here.
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class DatasetList(APIView):
     def get(self, request, format=None):
         datasets = Dataset.objects.all()
@@ -33,6 +35,7 @@ class DatasetList(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class DatasetDetail(APIView):
     def get_object(self, pk):
         try:
@@ -65,6 +68,7 @@ class DatasetDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class BuildingBlockList(APIView):
     def get(self, request, format=None):
         building_blocks = BuildingBlock.objects.all()
@@ -89,6 +93,7 @@ class BuildingBlockList(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class BuildingBlockDetail(APIView):
     def get_object(self, pk):
         try:
@@ -122,6 +127,7 @@ class BuildingBlockDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class ApplicationList(APIView):
     def get(self, request, format=None):
         apps = Application.objects.all()
@@ -146,6 +152,7 @@ class ApplicationList(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class ApplicationDetail(APIView):
     def get_object(self, pk):
         try:
@@ -179,6 +186,7 @@ class ApplicationDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class IdeaList(APIView):
     def get(self, request, format=None):
         ideas = Idea.objects.all()
@@ -203,6 +211,7 @@ class IdeaList(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes((IsAuthenticatedOrReadOnly,))
 class IdeaDetail(APIView):
     def get_object(self, pk):
         try:
