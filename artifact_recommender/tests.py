@@ -148,6 +148,26 @@ class BuildingBlockTestCase(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(BuildingBlock.objects.count(), 0)
 
+    def test_get_buildingblocks(self):
+        response = self.client.post(
+            '/buildingblock/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(BuildingBlock.objects.count(), 1)
+
+        response = self.client.get('/buildingblock/')
+
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 1)
+
 
 class DatasetTestCase(TestCase):
     def setUp(self):
