@@ -9,4 +9,6 @@ urlpatterns = [
         views.BuildingBlockDetail.as_view()),
     url(r'^app/$', views.ApplicationList.as_view()),
     url(r'^app/(?P<pk>[0-9]+)/$', views.ApplicationDetail.as_view()),
+    url(r'^idea/$', views.IdeaList.as_view()),
+    url(r'^idea/(?P<pk>[0-9]+)/$', views.IdeaDetail.as_view()),
 ]
