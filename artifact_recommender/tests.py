@@ -12,7 +12,7 @@ class BuildingBlockTestCase(TestCase):
 
     def test_create_buildingblock(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
-        building_block = BuildingBlock.objects.create(lang='spanish')
+        building_block = BuildingBlock.objects.create(id=4444, lang='spanish')
         building_block.tags = three_tag_list
         building_block.save()
 
@@ -20,10 +20,11 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertListEqual(list(building_block.tags.all()), three_tag_list)
         self.assertEqual(building_block.lang, 'spanish')
+        self.assertEqual(building_block.id, 4444)
         self.assertEqual(BuildingBlock.objects.count(), 1)
 
         two_tag_list = [self.tag1, self.tag2]
-        building_block = BuildingBlock.objects.create(lang='spanish')
+        building_block = BuildingBlock.objects.create(id=5555, lang='spanish')
         building_block.tags = two_tag_list
         building_block.save()
 
@@ -31,12 +32,13 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertListEqual(list(building_block.tags.all()), two_tag_list)
         self.assertEqual(building_block.lang, 'spanish')
+        self.assertEqual(building_block.id, 5555)
         self.assertEqual(BuildingBlock.objects.count(), 2)
 
     def test_update_buildingblock(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
         two_tag_list = [self.tag1, self.tag2]
-        building_block = BuildingBlock.objects.create(lang='spanish')
+        building_block = BuildingBlock.objects.create(id=4444, lang='spanish')
         building_block.tags = three_tag_list
         building_block.save()
 
@@ -44,6 +46,7 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertListEqual(list(building_block.tags.all()), three_tag_list)
         self.assertEqual(building_block.lang, 'spanish')
+        self.assertEqual(building_block.id, 4444)
         self.assertEqual(BuildingBlock.objects.count(), 1)
 
         building_block.lang = 'italian'
@@ -54,11 +57,12 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertListEqual(list(building_block.tags.all()), two_tag_list)
         self.assertEqual(building_block.lang, 'italian')
+        self.assertEqual(building_block.id, 4444)
         self.assertEqual(BuildingBlock.objects.count(), 1)
 
     def test_delete_buildingblock(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
-        building_block = BuildingBlock.objects.create(lang='spanish')
+        building_block = BuildingBlock.objects.create(id=4444, lang='spanish')
         building_block.tags = three_tag_list
         building_block.save()
 
@@ -78,7 +82,7 @@ class DatasetTestCase(TestCase):
 
     def test_create_dataset(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
-        dataset = Dataset.objects.create(lang='spanish')
+        dataset = Dataset.objects.create(id=4444, lang='spanish')
         dataset.tags = three_tag_list
         dataset.save()
 
@@ -86,10 +90,11 @@ class DatasetTestCase(TestCase):
 
         self.assertListEqual(list(dataset.tags.all()), three_tag_list)
         self.assertEqual(dataset.lang, 'spanish')
+        self.assertEqual(dataset.id, 4444)
         self.assertEqual(Dataset.objects.count(), 1)
 
         two_tag_list = [self.tag1, self.tag2]
-        dataset = Dataset.objects.create(lang='spanish')
+        dataset = Dataset.objects.create(id=5555, lang='spanish')
         dataset.tags = two_tag_list
         dataset.save()
 
@@ -97,12 +102,13 @@ class DatasetTestCase(TestCase):
 
         self.assertListEqual(list(dataset.tags.all()), two_tag_list)
         self.assertEqual(dataset.lang, 'spanish')
+        self.assertEqual(dataset.id, 5555)
         self.assertEqual(Dataset.objects.count(), 2)
 
     def test_update_dataset(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
         two_tag_list = [self.tag1, self.tag2]
-        dataset = Dataset.objects.create(lang='spanish')
+        dataset = Dataset.objects.create(id=4444, lang='spanish')
         dataset.tags = three_tag_list
         dataset.save()
 
@@ -110,6 +116,7 @@ class DatasetTestCase(TestCase):
 
         self.assertListEqual(list(dataset.tags.all()), three_tag_list)
         self.assertEqual(dataset.lang, 'spanish')
+        self.assertEqual(dataset.id, 4444)
         self.assertEqual(Dataset.objects.count(), 1)
 
         dataset.lang = 'italian'
@@ -120,11 +127,12 @@ class DatasetTestCase(TestCase):
 
         self.assertListEqual(list(dataset.tags.all()), two_tag_list)
         self.assertEqual(dataset.lang, 'italian')
+        self.assertEqual(dataset.id, 4444)
         self.assertEqual(Dataset.objects.count(), 1)
 
     def test_delete_dataset(self):
         three_tag_list = [self.tag1, self.tag2, self.tag3]
-        dataset = Dataset.objects.create(lang='spanish')
+        dataset = Dataset.objects.create(id=4444, lang='spanish')
         dataset.tags = three_tag_list
         dataset.save()
 
