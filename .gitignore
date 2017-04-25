@@ -18,3 +18,4 @@ build/
 tests/report/
 db.sqlite3
 .coverage
+htmlcov

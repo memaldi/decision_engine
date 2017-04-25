@@ -8,6 +8,7 @@ class Tag(models.Model):
 
 
 class Artifact(models.Model):
+    id = models.IntegerField(primary_key=True)
     lang = models.CharField(max_length=20, null=False, blank=False)
     tags = models.ManyToManyField(Tag)
 
@@ -22,8 +23,6 @@ class BuildingBlock(Artifact):
 
 class Application(Artifact):
     scope = models.CharField(max_length=20)
-    lat = models.FloatField(null=True)
-    lon = models.FloatField(null=True)
     min_age = models.IntegerField(null=True)
 
 
