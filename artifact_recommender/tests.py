@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
-from artifact_recommender.models import  Application
+from artifact_recommender.models import Application, Idea
 from django.contrib.auth.models import User
 import base64
 import json
@@ -80,7 +80,7 @@ class BuildingBlockTestCase(TestCase):
             content_type='application/json',
             **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
                 base64.b64encode('{}:{}'.format(
-                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+                    BASIC_USER, BASIC_PASSWORD).encode()).decode())},
             follow=True)
 
         self.assertEqual(response.status_code, 201)
@@ -333,7 +333,7 @@ class DatasetTestCase(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(Dataset.objects.count(), 0)
 
-    def test_get_dataset(self):
+    def test_get_datasets(self):
         response = self.client.post(
             '/dataset/',
             json.dumps({'id': 4444,
@@ -585,3 +585,208 @@ class ApplicationTestCase(TestCase):
         self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
         self.assertEqual(response_json['scope'], 'Bilbao')
         self.assertEqual(response_json['min_age'], 13)
+
+
+class IdeaTestCase(TestCase):
+    def setUp(self):
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        self.client = Client()
+
+    def test_create_idea_anon(self):
+        response = self.client.post('/idea/',
+                                    json.dumps({'id': 4444,
+                                                'lang': 'spanish',
+                                                'tags': ['tag1', 'tag2']}),
+                                    content_type='application/json')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(Idea.objects.count(), 0)
+
+    def test_create_idea(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+    def test_update_idea_anon(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.put(
+            '/idea/4444/',
+            json.dumps({'id': 4444,
+                        'lang': 'italian',
+                        'tags': ['tag3', 'tag4']}),
+            content_type='application/json')
+
+        self.assertEqual(response.status_code, 401)
+
+        idea = Idea.objects.first()
+        self.assertEqual(idea.lang, 'spanish')
+        tags = []
+        for tag in idea.tags.all():
+            tags.append(tag.name)
+        self.assertListEqual(tags, ['tag1', 'tag2'])
+
+    def test_update_idea(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.put(
+            '/idea/4444/',
+            json.dumps({'id': 4444,
+                        'lang': 'italian',
+                        'tags': ['tag3', 'tag4']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        self.assertEqual(response.status_code, 200)
+
+        idea = Idea.objects.first()
+        self.assertEqual(idea.lang, 'italian')
+        tags = []
+        for tag in idea.tags.all():
+            tags.append(tag.name)
+        self.assertListEqual(tags, ['tag3', 'tag4'])
+
+    def test_delete_idea_anon(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.delete('/idea/4444/')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(Idea.objects.count(), 1)
+
+    def test_delete_idea(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.delete(
+            '/idea/4444/',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(Idea.objects.count(), 0)
+
+    def test_get_ideas(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.get('/idea/')
+
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 1)
+
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4445,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 2)
+
+        response = self.client.get('/idea/')
+
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 2)
+
+    def test_get_idea(self):
+        response = self.client.post(
+            '/idea/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Idea.objects.count(), 1)
+
+        response = self.client.get('/idea/4444/')
+
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['id'], 4444)
+        self.assertEqual(response_json['lang'], 'spanish')
+        self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
