@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'artifact_recommender',
     'rest_framework',
+    'django_rq',
 ]
 
 MIDDLEWARE = [
@@ -127,4 +128,18 @@ REST_FRAMEWORK = {
     )
 }
 
-REDIS_URL = 'redis://django-redis:6379/1'
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'django-redis',
+        'PORT': 6379,
+        'DB': 1,
+        'DEFAULT_TIMEOUT': 360,
+    }
+}
+
+
+REDIS_HOST = 'django-redis'
+REDIS_PORT = 6379
+REDIS_DB = 1
+
+MAX_LEVENSHTEIN = 1
