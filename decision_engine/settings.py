@@ -126,3 +126,5 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     )
 }
+
+REDIS_URL = 'redis://django-redis:6379/1'

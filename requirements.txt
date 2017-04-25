@@ -1,3 +1,4 @@
+click==6.7
 coverage==4.3.4
 coveralls==1.1
 Django==1.11
@@ -5,5 +6,9 @@ django-filter==1.0.2
 djangorestframework==3.6.2
 docopt==0.6.2
 Markdown==2.6.8
+nltk==3.2.2
 pytz==2017.2
+redis==2.10.5
 requests==2.13.0
+rq==0.7.1
+six==1.10.0

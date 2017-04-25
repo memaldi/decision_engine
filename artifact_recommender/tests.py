@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
 from artifact_recommender.models import Application, Idea
 from django.contrib.auth.models import User
+from unittest.mock import patch
 import base64
 import json
 # Create your tests here.
@@ -16,6 +17,13 @@ class BuildingBlockTestCase(TestCase):
         user.save()
 
         self.client = Client()
+
+        self.patcher = patch('artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.patcher.start()
+        self.mocked_stem_tags.return_value = ['tag1', 'tag2']
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_create_buildingblock_anon(self):
         response = self.client.post('/buildingblock/',
@@ -40,6 +48,7 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
     def test_update_buildingblock_anon(self):
         response = self.client.post(
@@ -54,6 +63,7 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.put(
             '/buildingblock/4444/',
@@ -85,7 +95,9 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
+        self.mocked_stem_tags.return_value = ['tag3', 'tag4']
         response = self.client.put(
             '/buildingblock/4444/',
             json.dumps({'id': 4444,
@@ -104,6 +116,7 @@ class BuildingBlockTestCase(TestCase):
         for tag in building_block.tags.all():
             tags.append(tag.name)
         self.assertListEqual(tags, ['tag3', 'tag4'])
+        self.mocked_stem_tags.assert_called_with('italian', ['tag3', 'tag4'])
 
     def test_delete_buildingblock_anon(self):
         response = self.client.post(
@@ -119,6 +132,7 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete('/buildingblock/4444/')
 
@@ -139,6 +153,7 @@ class BuildingBlockTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete(
             '/buildingblock/4444/',
@@ -161,6 +176,7 @@ class BuildingBlockTestCase(TestCase):
                      BASIC_USER, BASIC_PASSWORD).encode()).decode())},
             follow=True)
 
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
 
@@ -181,6 +197,7 @@ class BuildingBlockTestCase(TestCase):
                      BASIC_USER, BASIC_PASSWORD).encode()).decode())},
             follow=True)
 
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 2)
 
@@ -202,6 +219,7 @@ class BuildingBlockTestCase(TestCase):
                      BASIC_USER, BASIC_PASSWORD).encode()).decode())},
             follow=True)
 
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
         self.assertEqual(response.status_code, 201)
         self.assertEqual(BuildingBlock.objects.count(), 1)
 
@@ -221,6 +239,13 @@ class DatasetTestCase(TestCase):
         user.save()
 
         self.client = Client()
+
+        self.patcher = patch('artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.patcher.start()
+        self.mocked_stem_tags.return_value = ['tag1', 'tag2']
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_create_dataset_anon(self):
         response = self.client.post('/dataset/',
@@ -245,6 +270,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
     def test_update_dataset_anon(self):
         response = self.client.post(
@@ -259,6 +285,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.put(
             '/dataset/4444/',
@@ -290,7 +317,9 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
+        self.mocked_stem_tags.return_value = ['tag3', 'tag4']
         response = self.client.put(
             '/dataset/4444/',
             json.dumps({'id': 4444,
@@ -309,6 +338,7 @@ class DatasetTestCase(TestCase):
         for tag in dataset.tags.all():
             tags.append(tag.name)
         self.assertListEqual(tags, ['tag3', 'tag4'])
+        self.mocked_stem_tags.assert_called_with('italian', ['tag3', 'tag4'])
 
     def test_delete_dataset_anon(self):
         response = self.client.post(
@@ -324,6 +354,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete('/dataset/4444/')
 
@@ -344,6 +375,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete(
             '/dataset/4444/',
@@ -368,6 +400,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/dataset/')
 
@@ -388,6 +421,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 2)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/dataset/')
 
@@ -409,6 +443,7 @@ class DatasetTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Dataset.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/dataset/4444/')
 
@@ -426,6 +461,13 @@ class ApplicationTestCase(TestCase):
         user.save()
 
         self.client = Client()
+
+        self.patcher = patch('artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.patcher.start()
+        self.mocked_stem_tags.return_value = ['tag1', 'tag2']
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_create_app_anon(self):
         response = self.client.post('/app/',
@@ -454,6 +496,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
     def test_update_app_anon(self):
         response = self.client.post(
@@ -470,6 +513,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.put(
             '/app/4444/',
@@ -508,7 +552,9 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
+        self.mocked_stem_tags.return_value = ['tag3', 'tag4']
         response = self.client.put(
             '/app/4444/',
             json.dumps({'id': 4444,
@@ -529,6 +575,7 @@ class ApplicationTestCase(TestCase):
         for tag in app.tags.all():
             tags.append(tag.name)
         self.assertListEqual(tags, ['tag3', 'tag4'])
+        self.mocked_stem_tags.assert_called_with('italian', ['tag3', 'tag4'])
 
     def test_delete_app_anon(self):
         response = self.client.post(
@@ -546,6 +593,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete('/app/4444/')
 
@@ -568,6 +616,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete(
             '/app/4444/',
@@ -594,6 +643,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/app/')
 
@@ -616,6 +666,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 2)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/app/')
 
@@ -639,6 +690,7 @@ class ApplicationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Application.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/app/4444/')
 
@@ -658,6 +710,13 @@ class IdeaTestCase(TestCase):
         user.save()
 
         self.client = Client()
+
+        self.patcher = patch('artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.patcher.start()
+        self.mocked_stem_tags.return_value = ['tag1', 'tag2']
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_create_idea_anon(self):
         response = self.client.post('/idea/',
@@ -682,6 +741,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
     def test_update_idea_anon(self):
         response = self.client.post(
@@ -696,6 +756,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.put(
             '/idea/4444/',
@@ -727,7 +788,9 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
+        self.mocked_stem_tags.return_value = ['tag3', 'tag4']
         response = self.client.put(
             '/idea/4444/',
             json.dumps({'id': 4444,
@@ -746,6 +809,7 @@ class IdeaTestCase(TestCase):
         for tag in idea.tags.all():
             tags.append(tag.name)
         self.assertListEqual(tags, ['tag3', 'tag4'])
+        self.mocked_stem_tags.assert_called_with('italian', ['tag3', 'tag4'])
 
     def test_delete_idea_anon(self):
         response = self.client.post(
@@ -761,6 +825,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete('/idea/4444/')
 
@@ -781,6 +846,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.delete(
             '/idea/4444/',
@@ -805,6 +871,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/idea/')
 
@@ -825,6 +892,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 2)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/idea/')
 
@@ -846,6 +914,7 @@ class IdeaTestCase(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Idea.objects.count(), 1)
+        self.mocked_stem_tags.assert_called_with('spanish', ['tag1', 'tag2'])
 
         response = self.client.get('/idea/4444/')
 
