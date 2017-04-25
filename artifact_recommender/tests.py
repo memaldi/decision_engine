@@ -166,8 +166,29 @@ class BuildingBlockTestCase(TestCase):
 
         response = self.client.get('/buildingblock/')
 
+        self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(len(response_json), 1)
+
+        response = self.client.post(
+            '/buildingblock/',
+            json.dumps({'id': 4445,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(BuildingBlock.objects.count(), 2)
+
+        response = self.client.get('/buildingblock/')
+
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 2)
 
     def test_get_buildingblock(self):
         response = self.client.post(
@@ -350,8 +371,29 @@ class DatasetTestCase(TestCase):
 
         response = self.client.get('/dataset/')
 
+        self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(len(response_json), 1)
+
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4445,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Dataset.objects.count(), 2)
+
+        response = self.client.get('/dataset/')
+
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 2)
 
     def test_get_dataset(self):
         response = self.client.post(
@@ -555,8 +597,31 @@ class ApplicationTestCase(TestCase):
 
         response = self.client.get('/app/')
 
+        self.assertEqual(response.status_code, 200)
         response_json = json.loads(response.content)
         self.assertEqual(len(response_json), 1)
+
+        response = self.client.post(
+            '/app/',
+            json.dumps({'id': 4445,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2'],
+                        'scope': 'Bilbao',
+                        'min_age': 13}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())},
+            follow=True)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Application.objects.count(), 2)
+
+        response = self.client.get('/app/')
+
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json), 2)
 
     def test_get_app(self):
         response = self.client.post(
