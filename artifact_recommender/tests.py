@@ -18,12 +18,17 @@ class BuildingBlockTestCase(TestCase):
 
         self.client = Client()
 
-        self.patcher = patch('artifact_recommender.recommender.stem_tags')
-        self.mocked_stem_tags = self.patcher.start()
+        self.stem_tags_patcher = patch(
+            'artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.stem_tags_patcher.start()
         self.mocked_stem_tags.return_value = ['tag1', 'tag2']
 
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
     def tearDown(self):
-        self.patcher.stop()
+        self.stem_tags_patcher.stop()
+        self.rq_patcher.stop()
 
     def test_create_buildingblock_anon(self):
         response = self.client.post('/buildingblock/',
@@ -240,12 +245,17 @@ class DatasetTestCase(TestCase):
 
         self.client = Client()
 
-        self.patcher = patch('artifact_recommender.recommender.stem_tags')
-        self.mocked_stem_tags = self.patcher.start()
+        self.stem_tags_patcher = patch(
+            'artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.stem_tags_patcher.start()
         self.mocked_stem_tags.return_value = ['tag1', 'tag2']
 
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
     def tearDown(self):
-        self.patcher.stop()
+        self.stem_tags_patcher.stop()
+        self.rq_patcher.stop()
 
     def test_create_dataset_anon(self):
         response = self.client.post('/dataset/',
@@ -462,12 +472,17 @@ class ApplicationTestCase(TestCase):
 
         self.client = Client()
 
-        self.patcher = patch('artifact_recommender.recommender.stem_tags')
-        self.mocked_stem_tags = self.patcher.start()
+        self.stem_tags_patcher = patch(
+            'artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.stem_tags_patcher.start()
         self.mocked_stem_tags.return_value = ['tag1', 'tag2']
 
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
     def tearDown(self):
-        self.patcher.stop()
+        self.stem_tags_patcher.stop()
+        self.rq_patcher.stop()
 
     def test_create_app_anon(self):
         response = self.client.post('/app/',
@@ -711,12 +726,17 @@ class IdeaTestCase(TestCase):
 
         self.client = Client()
 
-        self.patcher = patch('artifact_recommender.recommender.stem_tags')
-        self.mocked_stem_tags = self.patcher.start()
+        self.stem_tags_patcher = patch(
+            'artifact_recommender.recommender.stem_tags')
+        self.mocked_stem_tags = self.stem_tags_patcher.start()
         self.mocked_stem_tags.return_value = ['tag1', 'tag2']
 
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
     def tearDown(self):
-        self.patcher.stop()
+        self.stem_tags_patcher.stop()
+        self.rq_patcher.stop()
 
     def test_create_idea_anon(self):
         response = self.client.post('/idea/',
