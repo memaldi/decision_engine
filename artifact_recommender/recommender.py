@@ -51,9 +51,7 @@ def tag_similarity(source_artifact_id):
 
         if similarity > 0:
             similar_artifacts[target_artifact] = similarity
-    print(similar_artifacts)
     for artifact in similar_artifacts:
-        print(source_artifact.id, artifact.id)
         if artifact.id != source_artifact.id:
             sim_value = similar_artifacts[artifact]
             similarity = models.Similarity(source_artifact=source_artifact,
