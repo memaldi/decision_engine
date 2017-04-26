@@ -1,14 +1,16 @@
 from artifact_recommender.models import Dataset, Tag, BuildingBlock
-from artifact_recommender.models import Application, Idea
+from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import serializers
 from artifact_recommender import recommender
 from django.http import Http404
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import permission_classes
+import json
 # Create your views here.
 
 
@@ -73,6 +75,36 @@ class DatasetDetail(APIView):
         dataset = self.get_object(pk)
         dataset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@permission_classes((IsAuthenticatedOrReadOnly,))
+class DatasetRecommendDataset(APIView):
+    def get_object(self, pk):
+        try:
+            return Dataset.objects.get(pk=pk)
+        except Dataset.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        dataset = self.get_object(pk)
+        similarity = Similarity.objects.filter(
+            Q(source_artifact=dataset) | Q(target_artifact=dataset)).order_by(
+                '-value')
+        similar_datasets = []
+        for sim in similarity:
+            if sim.source_artifact.id == dataset.id:
+                try:
+                    sim.target_artifact.dataset
+                    similar_datasets.append(sim.target_artifact.id)
+                except Dataset.DoesNotExist:
+                    pass
+            else:
+                try:
+                    sim.source_artifact.dataset
+                    similar_datasets.append(sim.source_artifact.id)
+                except Dataset.DoesNotExist:
+                    pass
+        return Response(json.dumps(similar_datasets))
 
 
 @permission_classes((IsAuthenticatedOrReadOnly,))
