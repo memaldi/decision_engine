@@ -16,7 +16,7 @@ class Artifact(models.Model):
     tags = models.ManyToManyField(Tag)
 
     def __str__(self):
-        return '{}\n{}\n{}\n'.format(self.id, self.lang, self.tags)
+        return '{}\n{}\n{}\n'.format(self.id, self.lang, self.tags.all())
 
 
 class Dataset(Artifact):
