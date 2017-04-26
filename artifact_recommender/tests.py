@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
-from artifact_recommender.models import Application, Idea
+from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import recommender
 from django.contrib.auth.models import User
 from nltk.stem.snowball import SnowballStemmer
@@ -11,6 +11,89 @@ import json
 
 BASIC_USER = 'test-user'
 BASIC_PASSWORD = 'test-password'
+
+
+class SimilarityTestCase(TestCase):
+    def setUp(self):
+        self.tag1 = Tag(name='tag1')
+        self.tag1.save()
+        self.tag2 = Tag(name='tag2')
+        self.tag2.save()
+        self.tag3 = Tag(name='tag1')
+        self.tag3.save()
+
+    def test_similarity_str(self):
+        source_dataset = Dataset(id=4444, lang='spanish')
+        source_dataset.save()
+        source_dataset.tags = [self.tag1, self.tag2, self.tag3]
+        source_dataset.save()
+
+        target_dataset = Dataset(id=4445, lang='spanish')
+        target_dataset.save()
+        target_dataset.tags = [self.tag1, self.tag2, self.tag3]
+        target_dataset.save()
+
+        similarity = Similarity(source_artifact=source_dataset,
+                                target_artifact=target_dataset, value=1.0)
+        similarity.save()
+        self.assertEqual(str(similarity), '4444 - 4445: 1.0')
+
+
+class TagTestCase(TestCase):
+    def test_tag_str(self):
+        tag = Tag(name='tag1')
+        tag.save()
+        self.assertEqual(str(tag), 'tag1')
+
+
+class ArtifactTestCase(TestCase):
+    def setUp(self):
+        self.tag1 = Tag(name='tag1')
+        self.tag1.save()
+        self.tag2 = Tag(name='tag2')
+        self.tag2.save()
+        self.tag3 = Tag(name='tag1')
+        self.tag3.save()
+
+    def test_dataset_str(self):
+        dataset = Dataset(id=4444, lang='spanish')
+        dataset.save()
+        dataset.tags = [self.tag1, self.tag2, self.tag3]
+        dataset.save()
+        self.assertEqual(
+            str(dataset),
+            '4444\nspanish\n<QuerySet [<Tag: tag1>, <Tag: tag2>, '
+            '<Tag: tag1>]>\n')
+
+    def test_buldingblock_str(self):
+        buildingblock = BuildingBlock(id=4444, lang='spanish')
+        buildingblock.save()
+        buildingblock.tags = [self.tag1, self.tag2, self.tag3]
+        buildingblock.save()
+        self.assertEqual(
+            str(buildingblock),
+            '4444\nspanish\n<QuerySet [<Tag: tag1>, <Tag: tag2>, '
+            '<Tag: tag1>]>\n')
+
+    def test_app_str(self):
+        app = Application(id=4444, lang='spanish', scope='Bilbao', min_age=13)
+        app.save()
+        app.tags = [self.tag1, self.tag2, self.tag3]
+        app.save()
+        self.assertEqual(
+            str(app),
+            '4444\nspanish\n<QuerySet [<Tag: tag1>, <Tag: tag2>, '
+            '<Tag: tag1>]>\n')
+
+    def test_idea_str(self):
+        idea = Idea(id=4444, lang='spanish')
+        idea.save()
+        idea.tags = [self.tag1, self.tag2, self.tag3]
+        idea.save()
+        self.assertEqual(
+            str(idea),
+            '4444\nspanish\n<QuerySet [<Tag: tag1>, <Tag: tag2>, '
+            '<Tag: tag1>]>\n')
 
 
 class BuildingBlockTestCase(TestCase):
