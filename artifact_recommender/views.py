@@ -124,7 +124,7 @@ class ArtifactRecommendation(APIView):
                         similar_datasets.append(sim.source_artifact.id)
                     except (Artifact.DoesNotExist, Http404):
                         pass
-            return Response(json.dumps(similar_datasets))
+            return Response(similar_datasets)
         except ValueError:
             return HttpResponseBadRequest("Bad request. Is the URL correct?")
 
