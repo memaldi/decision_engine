@@ -1,8 +1,10 @@
 from django.test import TestCase, Client
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
 from artifact_recommender.models import Application, Idea
+from artifact_recommender import recommender
 from django.contrib.auth.models import User
-from unittest.mock import patch
+from nltk.stem.snowball import SnowballStemmer
+from unittest.mock import patch, Mock
 import base64
 import json
 # Create your tests here.
@@ -944,3 +946,31 @@ class IdeaTestCase(TestCase):
         self.assertEqual(response_json['id'], 4444)
         self.assertEqual(response_json['lang'], 'spanish')
         self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
+
+
+class MockedStemmer():
+
+    def __init__(self, lang='spanish'):
+        self.lang = lang
+
+    def stem(self, string):
+        return 'stemmed_tag'
+
+
+class TestRecommender(TestCase):
+
+    @patch('nltk.stem.snowball.SnowballStemmer.languages', ("spanish",))
+    @patch('nltk.stem.snowball.SnowballStemmer')
+    def test_stem_tags(self, patched_stemmer):
+        patched_stemmer.return_value = MockedStemmer()
+
+        tags = recommender.stem_tags('spanish', ['tag1', 'tag2', 'tag3'])
+        self.assertListEqual(tags, ['stemmed_tag', 'stemmed_tag',
+                                    'stemmed_tag'])
+
+    @patch('nltk.stem.snowball.SnowballStemmer.languages', ("spanish",))
+    def test_stem_tags_no_lang(self):
+
+        tags = recommender.stem_tags('serbian', ['tag1', 'tag2', 'tag3'])
+
+        self.assertListEqual(tags, ['tag1', 'tag2', 'tag3'])
