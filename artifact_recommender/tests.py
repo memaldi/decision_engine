@@ -970,7 +970,38 @@ class TestRecommender(TestCase):
 
     @patch('nltk.stem.snowball.SnowballStemmer.languages', ("spanish",))
     def test_stem_tags_no_lang(self):
-
         tags = recommender.stem_tags('serbian', ['tag1', 'tag2', 'tag3'])
 
         self.assertListEqual(tags, ['tag1', 'tag2', 'tag3'])
+
+    def test_tags_similarity_total(self):
+        source_tags = set(['tag1', 'tag2', 'tag3'])
+        target_tags = set(['tag3', 'tag1', 'tag2'])
+
+        sim = recommender.tags_similarity(source_tags, target_tags)
+
+        self.assertEqual(sim, 1.0)
+
+    def test_tags_similarity_zero(self):
+        source_tags = set(['tag1', 'tag2', 'tag3'])
+        target_tags = set(['tag4', 'tag5', 'tag6'])
+
+        sim = recommender.tags_similarity(source_tags, target_tags)
+
+        self.assertEqual(sim, 0)
+
+    def test_tags_simirity_error(self):
+        source_tags = set()
+        target_tags = set()
+
+        sim = recommender.tags_similarity(source_tags, target_tags)
+
+        self.assertEqual(sim, 0)
+
+    def test_tags_simirity_percent(self):
+        source_tags = set(['tag1', 'tag2', 'tag3'])
+        target_tags = set(['tag1', 'tag2'])
+
+        sim = recommender.tags_similarity(source_tags, target_tags)
+
+        self.assertEqual(sim, 0.6666666666666666)
