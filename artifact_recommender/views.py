@@ -1,6 +1,7 @@
 from artifact_recommender.models import Dataset, Tag, BuildingBlock
 from artifact_recommender.models import Application, Idea
 from artifact_recommender import serializers
+from artifact_recommender import recommender
 from django.http import Http404
 from django.db import transaction
 from rest_framework import status
@@ -20,6 +21,9 @@ class DatasetList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
+            request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
                     tag = Tag.objects.get(name=tag_name)
@@ -50,6 +54,9 @@ class DatasetDetail(APIView):
 
     def put(self, request, pk, format=None):
         dataset = self.get_object(pk)
+        stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                             request.data['tags'])
+        request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
                 Tag.objects.get(name=tag_name)
@@ -78,6 +85,9 @@ class BuildingBlockList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
+            request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
                     tag = Tag.objects.get(name=tag_name)
@@ -108,6 +118,9 @@ class BuildingBlockDetail(APIView):
 
     def put(self, request, pk, format=None):
         building_block = self.get_object(pk)
+        stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                             request.data['tags'])
+        request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
                 Tag.objects.get(name=tag_name)
@@ -137,6 +150,9 @@ class ApplicationList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
+            request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
                     tag = Tag.objects.get(name=tag_name)
@@ -167,6 +183,9 @@ class ApplicationDetail(APIView):
 
     def put(self, request, pk, format=None):
         application = self.get_object(pk)
+        stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                             request.data['tags'])
+        request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
                 Tag.objects.get(name=tag_name)
@@ -196,6 +215,12 @@ class IdeaList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
+            request.data['tags'] = stemmed_tags
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
+            request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
                     tag = Tag.objects.get(name=tag_name)
@@ -226,6 +251,9 @@ class IdeaDetail(APIView):
 
     def put(self, request, pk, format=None):
         idea = self.get_object(pk)
+        stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                             request.data['tags'])
+        request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
                 Tag.objects.get(name=tag_name)

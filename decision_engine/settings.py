@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'artifact_recommender',
     'rest_framework',
+    'django_rq',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +127,19 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     )
 }
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'django-redis',
+        'PORT': 6379,
+        'DB': 1,
+        'DEFAULT_TIMEOUT': 360,
+    }
+}
+
+
+REDIS_HOST = 'django-redis'
+REDIS_PORT = 6379
+REDIS_DB = 1
+
+MAX_LEVENSHTEIN = 1
