@@ -1,15 +1,26 @@
-from artifact_recommender.models import Dataset, Tag, BuildingBlock
-from artifact_recommender.models import Application, Idea
+from artifact_recommender.models import Dataset, Tag, BuildingBlock, Artifact
+from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import serializers
 from artifact_recommender import recommender
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.db import transaction
+from django.db.models import Q
+from enum import Enum
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import permission_classes
+import json
 # Create your views here.
+
+
+class ArtifactType(Enum):
+    DATASET = "dataset"
+    BUILDING_BLOCK = "buildingblock"
+    APP = "app"
+    IDEA = "idea"
+    ARTIFACT = "artifact"
 
 
 @permission_classes((IsAuthenticatedOrReadOnly,))
@@ -73,6 +84,49 @@ class DatasetDetail(APIView):
         dataset = self.get_object(pk)
         dataset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@permission_classes((IsAuthenticatedOrReadOnly,))
+class ArtifactRecommendation(APIView):
+    def get_object(self, pk, _type):
+        try:
+            artifact = Artifact.objects.get(pk=pk)
+            if ArtifactType(_type) == ArtifactType.DATASET:
+                artifact.dataset
+            elif ArtifactType(_type) == ArtifactType.BUILDING_BLOCK:
+                artifact.buildingblock
+            elif ArtifactType(_type) == ArtifactType.APP:
+                artifact.application
+            elif ArtifactType(_type) == ArtifactType.IDEA:
+                artifact.idea
+            return artifact
+        except Artifact.DoesNotExist:
+            raise Http404
+
+    def get(self, request, source, pk, target, format=None):
+        try:
+            artifact = self.get_object(pk, source)
+            similarity = Similarity.objects.filter(
+                Q(source_artifact=artifact) |
+                Q(target_artifact=artifact)).order_by(
+                    '-value')
+            similar_datasets = []
+            for sim in similarity:
+                if sim.source_artifact.id == artifact.id:
+                    try:
+                        self.get_object(sim.target_artifact.id, target)
+                        similar_datasets.append(sim.target_artifact.id)
+                    except (Artifact.DoesNotExist, Http404):
+                        pass
+                else:
+                    try:
+                        self.get_object(sim.source_artifact.id, target)
+                        similar_datasets.append(sim.source_artifact.id)
+                    except (Artifact.DoesNotExist, Http404):
+                        pass
+            return Response(similar_datasets)
+        except ValueError:
+            return HttpResponseBadRequest("Bad request. Is the URL correct?")
 
 
 @permission_classes((IsAuthenticatedOrReadOnly,))

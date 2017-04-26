@@ -1257,3 +1257,179 @@ class TestRecommender(TestCase):
              '4444 - 4446: 1.0',
              '4444 - 4447: 0.5',
              '4444 - 4448: 0.5'])
+
+
+class ArtifactRecommendationTestCase(TestCase):
+    def setUp(self):
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
+        for i in range(1, 5):
+            response = self.client.post(
+                '/dataset/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+            recommender.tag_similarity(i)
+        for i in range(5, 10):
+            response = self.client.post(
+                '/buildingblock/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+        for i in range(10, 15):
+            response = self.client.post(
+                '/app/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2'],
+                            'scope': 'Bilbao',
+                            'min_age': 13}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+        for i in range(15, 20):
+            response = self.client.post(
+                '/idea/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+
+    def tearDown(self):
+        self.rq_patcher.stop()
+
+    def test_dataset_recommend_datasets(self):
+        response = self.client.get('/dataset/1/recommend/dataset/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [2, 3, 4])
+
+    def test_dataset_recommend_buildingblocks(self):
+        response = self.client.get('/dataset/1/recommend/buildingblock/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [5, 6, 7, 8, 9])
+
+    def test_dataset_recommend_apps(self):
+        response = self.client.get('/dataset/1/recommend/app/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [10, 11, 12, 13, 14])
+
+    def test_dataset_recommend_ideas(self):
+        response = self.client.get('/dataset/1/recommend/idea/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [15, 16, 17, 18, 19])
+
+    def test_dataset_recommend_all(self):
+        response = self.client.get('/dataset/1/recommend/artifact/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                              15, 16, 17, 18, 19])
+
+    def test_buildingblock_recommend_datasets(self):
+        response = self.client.get('/buildingblock/5/recommend/dataset/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [1, 2, 3, 4])
+
+    def test_buildingblock_recommend_buildingblocks(self):
+        response = self.client.get('/buildingblock/5/recommend/buildingblock/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [6, 7, 8, 9])
+
+    def test_buildingblock_recommend_apps(self):
+        response = self.client.get('/buildingblock/5/recommend/app/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [10, 11, 12, 13, 14])
+
+    def test_buildingblock_recommend_ideas(self):
+        response = self.client.get('/buildingblock/5/recommend/idea/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [15, 16, 17, 18, 19])
+
+    def test_buildingblock_recommend_all(self):
+        response = self.client.get('/buildingblock/5/recommend/artifact/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                              15, 16, 17, 18, 19])
+
+    def test_app_recommend_datasets(self):
+        response = self.client.get('/app/10/recommend/dataset/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [1, 2, 3, 4])
+
+    def test_app_recommend_buildingblocks(self):
+        response = self.client.get('/app/10/recommend/buildingblock/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [5, 6, 7, 8, 9])
+
+    def test_app_recommend_apps(self):
+        response = self.client.get('/app/10/recommend/app/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [11, 12, 13, 14])
+
+    def test_app_recommend_ideas(self):
+        response = self.client.get('/app/10/recommend/idea/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [15, 16, 17, 18, 19])
+
+    def test_app_recommend_all(self):
+        response = self.client.get('/app/10/recommend/artifact/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14,
+                              15, 16, 17, 18, 19])
+
+    def test_idea_recommend_datasets(self):
+        response = self.client.get('/idea/15/recommend/dataset/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [1, 2, 3, 4])
+
+    def test_idea_recommend_buildingblocks(self):
+        response = self.client.get('/idea/15/recommend/buildingblock/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content), [5, 6, 7, 8, 9])
+
+    def test_idea_recommend_apps(self):
+        response = self.client.get('/idea/15/recommend/app/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [10, 11, 12, 13, 14])
+
+    def test_idea_recommend_ideas(self):
+        response = self.client.get('/idea/15/recommend/idea/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [16, 17, 18, 19])
+
+    def test_idea_recommend_all(self):
+        response = self.client.get('/idea/15/recommend/artifact/')
+        self.assertEqual(response.status_code, 200)
+        self.assertListEqual(json.loads(response.content),
+                             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                              16, 17, 18, 19])
