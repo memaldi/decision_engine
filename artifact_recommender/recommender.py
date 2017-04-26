@@ -31,16 +31,11 @@ def tag_similarity(source_artifact_id):
         modified_tags = set()
         if source_artifact.lang not in snowball.SnowballStemmer.languages:
             for target_tag in target_artifact.tags.all():
-                add = False
                 for source_tag in source_artifact.tags.all():
                     distance = Levenshtein.distance(target_tag.name,
                                                     source_tag.name)
                     if distance <= settings.MAX_LEVENSHTEIN:
-                        modified_tags.add(source_tag.name)
-                        add = True
-                        break
-                if not add:
-                    modified_tags.add(target_tag.name)
+                        modified_tags.add(target_tag.name)
         else:
             for target_tag in target_artifact.tags.all():
                 modified_tags.add(target_tag.name)
