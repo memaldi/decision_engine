@@ -30,7 +30,7 @@ def tag_similarity(source_artifact_id):
     for target_artifact in models.Artifact.objects.all():
         modified_tags = set()
         if source_artifact.lang not in snowball.SnowballStemmer.languages:
-            for target_tag in target_artifact.tags:
+            for target_tag in target_artifact.tags.all():
                 add = False
                 for source_tag in source_artifact.tags.all():
                     distance = Levenshtein.distance(target_tag.name,
