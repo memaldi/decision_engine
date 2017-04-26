@@ -1088,3 +1088,103 @@ class TestRecommender(TestCase):
         sim = recommender.tags_similarity(source_tags, target_tags)
 
         self.assertEqual(sim, 0.6666666666666666)
+
+    @patch('nltk.stem.snowball.SnowballStemmer.languages', ("spanish",))
+    def test_tag_similarity(self):
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'spanish',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        for i in range(4445, 4447):
+            response = self.client.post(
+                '/dataset/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        for i in range(4447, 4449):
+            response = self.client.post(
+                '/dataset/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+        source_artifact = Dataset.objects.get(pk=4444)
+        recommender.tag_similarity(source_artifact.id)
+
+        str_similarities = []
+        for similarity in Similarity.objects.all():
+            str_similarities.append(str(similarity))
+
+        self.assertListEqual(
+            str_similarities,
+            ['4444 - 4445: 1.0',
+             '4444 - 4446: 1.0',
+             '4444 - 4447: 0.5',
+             '4444 - 4448: 0.5'])
+
+    @patch('nltk.stem.snowball.SnowballStemmer.languages', ("spanish",))
+    def test_tag_similarity_no_lang(self):
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        response = self.client.post(
+            '/dataset/',
+            json.dumps({'id': 4444,
+                        'lang': 'serbian',
+                        'tags': ['tag1', 'tag2']}),
+            content_type='application/json',
+            **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                base64.b64encode('{}:{}'.format(
+                     BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        for i in range(4445, 4447):
+            response = self.client.post(
+                '/dataset/',
+                json.dumps({'id': i,
+                            'lang': 'serbian',
+                            'tags': ['tag1', 'tag2']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+
+        for i in range(4447, 4449):
+            response = self.client.post(
+                '/dataset/',
+                json.dumps({'id': i,
+                            'lang': 'serbian',
+                            'tags': ['tag1']}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+        source_artifact = Dataset.objects.get(pk=4444)
+        recommender.tag_similarity(source_artifact.id)
+
+        str_similarities = []
+        for similarity in Similarity.objects.all():
+            str_similarities.append(str(similarity))
+
+        self.assertListEqual(
+            str_similarities,
+            ['4444 - 4445: 1.0',
+             '4444 - 4446: 1.0',
+             '4444 - 4447: 0.5',
+             '4444 - 4448: 0.5'])
