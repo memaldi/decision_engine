@@ -13,7 +13,6 @@ def get_user_data(user_id):
     if response.status_code == 200:
         user_age, user_location, user_apps, user_tags = None, None, None, None
         json_response = response.json()
-        print(json_response)
         user_apps = []
         if 'usedApps' in json_response:
             for app in json_response['usedApps']:

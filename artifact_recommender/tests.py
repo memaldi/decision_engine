@@ -2,6 +2,8 @@ from django.test import TestCase, Client
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
 from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import recommender
+from artifact_recommender import cdv
+from decision_engine import settings
 from django.contrib.auth.models import User
 from nltk.stem.snowball import SnowballStemmer
 from unittest.mock import patch, Mock
@@ -1433,3 +1435,131 @@ class ArtifactRecommendationTestCase(TestCase):
         self.assertListEqual(json.loads(response.content),
                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                               16, 17, 18, 19])
+
+
+class CDVTestCase(TestCase):
+
+    COMPLETE_CDV_RESPONSE = '''{
+          "skills": [],
+          "lastKnownLocation": {
+            "lng": "-2.9334110",
+            "lat": "43.2603479"
+          },
+          "address": "bla bla bla",
+          "birthdate": "1985-03-07 00:00:00",
+          "usedApps": [
+                {
+                    "appID": 10,
+                    "appName": "app1"
+                },
+                {
+                    "appID": 11,
+                    "appName": "app2"
+                },
+                {
+                    "appID": 12,
+                    "appName": "app3"
+                }
+          ],
+          "userTags": ["soccer", "sports", "tennis"],
+          "city": "Bilbao"
+        }
+    '''
+
+    class MockedResponse(object):
+        def __init__(self, content, status_code=200):
+            self.content = content
+            self.status_code = status_code
+
+        def json(self):
+            return json.loads(self.content)
+
+    def setUp(self):
+        user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
+        user.save()
+
+        self.rq_patcher = patch('django_rq.enqueue')
+        self.rq_patcher.start()
+
+        for i in range(10, 15):
+            response = self.client.post(
+                '/app/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2'],
+                            'scope': 'Bilbao',
+                            'min_age': 13}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+
+    def tearDown(self):
+        self.rq_patcher.stop()
+
+    @patch('requests.get')
+    def test_cdv_200_ok(self, mocked_get):
+        mocked_get.return_value = self.MockedResponse(
+            self.COMPLETE_CDV_RESPONSE)
+
+        user_age, user_location, user_apps, user_tags = cdv.get_user_data(1)
+
+        mocked_get.assert_called_with(
+            'https://%s/dev/api/cdv/getusermetadata/%s' %
+            (settings.WELIVE_HOST, 1),
+            auth=(settings.BASIC_USER, settings.BASIC_PASSWORD))
+
+        self.assertEqual(user_age, 32)
+        self.assertEqual(user_location, 'Bilbao')
+        self.assertCountEqual(user_apps, [10, 12, 11])
+        self.assertCountEqual(user_tags, ['soccer', 'sports', 'tennis'])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app(self, mocked_cdv):
+        mocked_cdv.return_value = 35, 'Bilbao', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, 43.2603479, -2.9334110, 50)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_no_lat_lon(self, mocked_cdv):
+        mocked_cdv.return_value = 35, 'Bilbao', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 50)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_no_user_location(self, mocked_cdv):
+        mocked_cdv.return_value = 35, '', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 50)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertListEqual(app_list, [])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_no_user_location_big_radius(self, mocked_cdv):
+        mocked_cdv.return_value = 35, '', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 10000)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_no_user_tags(self, mocked_cdv):
+        mocked_cdv.return_value = 35, 'Bilbao', [], []
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 10000)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
