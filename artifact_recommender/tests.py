@@ -1563,3 +1563,28 @@ class CDVTestCase(TestCase):
         mocked_cdv.assert_called_with(1)
 
         self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
+
+
+class UserAppsTestCase(TestCase):
+
+    @patch('artifact_recommender.recommender.recommend_app')
+    def test_get_user_app_recommendation(self, mocked_recommender):
+        mocked_recommender.return_value = [10, 11, 12]
+
+        response = self.client.get(
+            '/user/1/apps/?lat=43.2603479&lon=-2.9334110&radius=50')
+
+        self.assertEqual(response.status_code, 200)
+        mocked_recommender.assert_called_with('1', '43.2603479',
+                                              '-2.9334110', '50')
+        self.assertListEqual(json.loads(response.content), [10, 11, 12])
+
+    @patch('artifact_recommender.recommender.recommend_app')
+    def test_get_user_app_recommendation_no_params(self, mocked_recommender):
+        mocked_recommender.return_value = [10, 11, 12]
+
+        response = self.client.get('/user/1/apps/')
+
+        self.assertEqual(response.status_code, 200)
+        mocked_recommender.assert_called_with('1', -1000, -1000, 10)
+        self.assertListEqual(json.loads(response.content), [10, 11, 12])
