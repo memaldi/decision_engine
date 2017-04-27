@@ -143,3 +143,9 @@ REDIS_PORT = 6379
 REDIS_DB = 1
 
 MAX_LEVENSHTEIN = 1
+RECOMENDATION_THRESHOLD = 0.2
+
+# WeLive settings
+BASIC_USER = 'basic-user'
+BASIC_PASSWORD = 'basic-password'
+WELIVE_HOST = 'test.welive.eu'

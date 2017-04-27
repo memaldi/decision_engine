@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^app/(?P<pk>[0-9]+)/$', views.ApplicationDetail.as_view()),
     url(r'^idea/$', views.IdeaList.as_view()),
     url(r'^idea/(?P<pk>[0-9]+)/$', views.IdeaDetail.as_view()),
+    url(r'^user/(?P<user_id>[0-9]+)/apps/$', views.UserApps.as_view()),
 ]

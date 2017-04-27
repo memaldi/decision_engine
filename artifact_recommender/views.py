@@ -3,6 +3,7 @@ from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import serializers
 from artifact_recommender import recommender
 from django.http import Http404, HttpResponseBadRequest
+from django.http import HttpResponseServerError
 from django.db import transaction
 from django.db.models import Q
 from enum import Enum
@@ -324,3 +325,13 @@ class IdeaDetail(APIView):
         idea = self.get_object(pk)
         idea.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@permission_classes((IsAuthenticatedOrReadOnly,))
+class UserApps(APIView):
+    def get(self, request, user_id, format=None):
+        radius = request.GET.get('radius', 10)
+        lat = request.GET.get('lat', -1000)
+        lon = request.GET.get('lon', -1000)
+        app_list = recommender.recommend_app(user_id, lat, lon, radius)
+        return Response(app_list)
