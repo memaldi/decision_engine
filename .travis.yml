@@ -11,9 +11,9 @@ install:
 
 script:
     - coverage run --source '.' manage.py test
-    - docker build -t memaldi/de-app app/
-    - docker build -t memaldi/de-rq rq/
-    - docker-compose up -d
+    - docker build -t memaldi/de-app docker/app/
+    - docker build -t memaldi/de-rq docker/rq/
+    - docker-compose up -d docker/docker-compose.yml
 
 after_success:
   coveralls
