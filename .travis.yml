@@ -1,9 +1,20 @@
 language: python
 python:
     - "3.6"
+
+services:
+    - docker
+
 install:
     - pip install -r requirements.txt
     - pip install coveralls
-script: coverage run --source '.' manage.py test
+
+script:
+    - coverage run --source '.' manage.py test
+    - docker build -t memaldi/de-app docker/app/
+    - docker build -t memaldi/de-rq docker/rq/
+    - cd docker
+    - docker-compose up -d
+
 after_success:
   coveralls
