@@ -1,0 +1,34 @@
+version: '2'
+services:
+    db:
+        image: postgres
+        volumes:
+        - ./data:/var/lib/postgresql/data
+        environment:
+        - POSTGRES_PASSWORD=postgrespassword
+        - POSTGRES_USER=de
+        - POSTGRES_DB=de_db
+    redis:
+        image: redis
+    app:
+        build: ./app/
+        ports:
+        - "8000:8000"
+        environment:
+        - DB_ENV_POSTGRES_PASSWORD=postgrespassword
+        - DB_ENV_POSTGRES_USER=de
+        - DB_ENV_POSTGRES_DB=de_db
+        links:
+        - redis
+        - db
+        - rq
+        command: bash -c "while ! nc -w 1 -z db 5432; do sleep 0.1; done; ./entrypoint.sh"
+    rq:
+        build: ./rq/
+        environment:
+        - DB_ENV_POSTGRES_PASSWORD=postgrespassword
+        - DB_ENV_POSTGRES_USER=de
+        - DB_ENV_POSTGRES_DB=de_db
+        links:
+        - redis
+        - db
