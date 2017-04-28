@@ -15,6 +15,7 @@ script:
     - docker build -t memaldi/de-rq docker/rq/
     - cd docker
     - docker-compose up -d
+    - cd ..
 
 after_success:
   coveralls
