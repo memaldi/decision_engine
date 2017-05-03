@@ -11,7 +11,7 @@ def get_user_data(user_id):
             auth=(settings.BASIC_USER, settings.BASIC_PASSWORD))
 
     if response.status_code == 200:
-        user_age, user_location, user_apps, user_tags = None, None, None, None
+        user_age, user_location, user_apps, user_tags = 99, None, None, None
         json_response = response.json()
         user_apps = []
         if 'usedApps' in json_response:
