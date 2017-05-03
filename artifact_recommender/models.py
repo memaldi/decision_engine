@@ -29,7 +29,7 @@ class BuildingBlock(Artifact):
 
 class Application(Artifact):
     scope = models.CharField(max_length=20)
-    min_age = models.IntegerField(null=True)
+    min_age = models.IntegerField(null=True, default=0)
 
 
 class Idea(Artifact):
