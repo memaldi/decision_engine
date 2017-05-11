@@ -3,16 +3,15 @@ from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import serializers
 from artifact_recommender import recommender
 from django.http import Http404, HttpResponseBadRequest
-from django.http import HttpResponseServerError
 from django.db import transaction
 from django.db.models import Q
 from enum import Enum
 from rest_framework import status
+from rest_framework import serializers as rest_serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import permission_classes
-import json
 # Create your views here.
 
 
@@ -333,5 +332,20 @@ class UserApps(APIView):
         radius = request.GET.get('radius', 10)
         lat = request.GET.get('lat', -1000)
         lon = request.GET.get('lon', -1000)
+        errors = []
+        try:
+            lat = float(lat)
+        except ValueError:
+            errors.append('lat must be an integer')
+        try:
+            lon = float(lon)
+        except ValueError:
+            errors.append('lon must be an integer')
+        try:
+            radius = float(radius)
+        except ValueError:
+            errors.append('radius must be an integer')
+        if len(errors) > 0:
+            raise rest_serializers.ValidationError(errors, code=404)
         app_list = recommender.recommend_app(user_id, lat, lon, radius)
         return Response(app_list)
