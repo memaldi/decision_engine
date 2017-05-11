@@ -1,4 +1,5 @@
 import os
+import raven
 
 """
 Django settings for decision_engine project.
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'artifact_recommender',
     'rest_framework',
     'django_rq',
+    'raven.contrib.django.raven_compat',
 ]
 
 MIDDLEWARE = [
@@ -156,3 +158,11 @@ RECOMENDATION_THRESHOLD = 0.2
 BASIC_USER = os.getenv('WELIVE_BASIC_USER', '')
 BASIC_PASSWORD = os.getenv('WELIVE_BASIC_PASSWORD', '')
 WELIVE_HOST = os.getenv('WELIVE_HOST', 'test.welive.eu')
+
+# Sentry settings
+RAVEN_CONFIG = {
+    'dsn': os.getenv('SENTRY_DSN', ''),
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+}
