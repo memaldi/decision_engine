@@ -89,7 +89,7 @@ def recommend_app(user_id, lat, lon, radius):
     for app in models.Application.objects.filter(min_age__lte=user_age):
         app_loc = geolocator.geocode(app.scope)
         app_point = (app_loc.latitude, app_loc.longitude)
-        if vincenty(user_point, app_point).km <= radius:
+        if vincenty(user_point, app_point).km <= float(radius):
             filtered_apps.append(app)
 
     similar_apps = {}
