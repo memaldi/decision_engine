@@ -1474,6 +1474,20 @@ class CDVTestCase(TestCase):
         def json(self):
             return json.loads(self.content)
 
+    class MockedNominatim(object):
+        class MockedLocation(object):
+            def __init__(self, lat, lon):
+                self.latitude = lat
+                self.longitude = lon
+
+        def geocode(self, location):
+            if location is '':
+                return None
+            elif location == 'Bilbao':
+                return self.MockedLocation(43.2603479, -2.9334110)
+            elif location == 'europe':
+                return self.MockedLocation(51.0000003, 9.9999997)
+
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
         user.save()
@@ -1494,6 +1508,10 @@ class CDVTestCase(TestCase):
                     base64.b64encode('{}:{}'.format(
                          BASIC_USER, BASIC_PASSWORD).encode()).decode())})
             recommender.tag_similarity(i)
+
+        self.nominatim_patcher = patch('geopy.geocoders.Nominatim')
+        self.nominatim_mock = self.nominatim_patcher.start()
+        self.nominatim_mock.return_value = self.MockedNominatim()
 
     def tearDown(self):
         self.rq_patcher.stop()
@@ -1575,8 +1593,8 @@ class UserAppsTestCase(TestCase):
             '/user/1/apps/?lat=43.2603479&lon=-2.9334110&radius=50')
 
         self.assertEqual(response.status_code, 200)
-        mocked_recommender.assert_called_with('1', '43.2603479',
-                                              '-2.9334110', '50')
+        mocked_recommender.assert_called_with('1', 43.2603479,
+                                              -2.9334110, 50)
         self.assertListEqual(json.loads(response.content), [10, 11, 12])
 
     @patch('artifact_recommender.recommender.recommend_app')
@@ -1588,3 +1606,30 @@ class UserAppsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         mocked_recommender.assert_called_with('1', -1000, -1000, 10)
         self.assertListEqual(json.loads(response.content), [10, 11, 12])
+
+    @patch('artifact_recommender.recommender.recommend_app')
+    def test_get_user_app_recommendation_lat_error(self, mocked_recommender):
+        response = self.client.get(
+            '/user/1/apps/?lat=foo&lon=-2.9334110&radius=50')
+
+        self.assertEqual(response.status_code, 400)
+        json_response = json.loads(response.content)
+        self.assertEqual(json_response[0], 'lat must be an integer')
+
+    @patch('artifact_recommender.recommender.recommend_app')
+    def test_get_user_app_recommendation_lon_error(self, mocked_recommender):
+        response = self.client.get(
+            '/user/1/apps/?lat=43.2603479&lon=foo&radius=50')
+
+        self.assertEqual(response.status_code, 400)
+        json_response = json.loads(response.content)
+        self.assertEqual(json_response[0], 'lon must be an integer')
+
+    @patch('artifact_recommender.recommender.recommend_app')
+    def test_get_user_app_recommendation_radius_error(self, mocked_recommender):
+        response = self.client.get(
+            '/user/1/apps/?lat=43.2603479&lon=-2.9334110&radius=foo')
+
+        self.assertEqual(response.status_code, 400)
+        json_response = json.loads(response.content)
+        self.assertEqual(json_response[0], 'radius must be an integer')

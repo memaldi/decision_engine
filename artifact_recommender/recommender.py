@@ -2,7 +2,7 @@ from nltk.stem import snowball
 from artifact_recommender import models
 from artifact_recommender import cdv
 from decision_engine import settings
-from geopy.geocoders import Nominatim
+from geopy import geocoders
 from geopy.distance import vincenty
 from collections import Counter
 import Levenshtein
@@ -63,7 +63,7 @@ def tag_similarity(source_artifact_id):
 def recommend_app(user_id, lat, lon, radius):
     user_age, user_location, user_apps, user_tags = cdv.get_user_data(user_id)
 
-    geolocator = Nominatim()
+    geolocator = geocoders.Nominatim()
     if -1000 in [lat, lon]:
         user_loc = geolocator.geocode(user_location)
         if not user_loc:
@@ -89,7 +89,7 @@ def recommend_app(user_id, lat, lon, radius):
     for app in models.Application.objects.filter(min_age__lte=user_age):
         app_loc = geolocator.geocode(app.scope)
         app_point = (app_loc.latitude, app_loc.longitude)
-        if vincenty(user_point, app_point).km <= float(radius):
+        if vincenty(user_point, app_point).km <= radius:
             filtered_apps.append(app)
 
     similar_apps = {}
