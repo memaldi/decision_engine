@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import raven
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'artifact_recommender',
     'rest_framework',
     'django_rq',
+    'raven.contrib.django.raven_compat',
 ]
 
 MIDDLEWARE = [
@@ -149,3 +151,11 @@ RECOMENDATION_THRESHOLD = 0.2
 BASIC_USER = 'basic-user'
 BASIC_PASSWORD = 'basic-password'
 WELIVE_HOST = 'test.welive.eu'
+
+# Sentry settings
+RAVEN_CONFIG = {
+    'dsn': 'http://867545f3c5204ff8b36ceab11dfa207f:3157c01bc68d4550ad658b37fab099ac@my-sentry:9000/2',
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+}
