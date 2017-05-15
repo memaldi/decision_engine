@@ -1503,7 +1503,6 @@ class CDVTestCase(TestCase):
             elif location == 'Trento':
                 return self.MockedLocation(46.0664228, 11.1257601)
 
-
     class MockedExceptionEuropeNominatim(object):
         def geocode(self, location):
             if location == 'Bilbao':
