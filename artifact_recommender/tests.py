@@ -1496,9 +1496,7 @@ class CDVTestCase(TestCase):
                 self.longitude = lon
 
         def geocode(self, location):
-            if location is '':
-                return None
-            elif location == 'Bilbao':
+            if location == 'Bilbao':
                 raise GeocoderServiceError
             elif location == 'europe':
                 return self.MockedLocation(51.0000003, 9.9999997)
@@ -1507,20 +1505,11 @@ class CDVTestCase(TestCase):
 
 
     class MockedExceptionEuropeNominatim(object):
-        class MockedLocation(object):
-            def __init__(self, lat, lon):
-                self.latitude = lat
-                self.longitude = lon
-
         def geocode(self, location):
-            if location is '':
-                return None
-            elif location == 'Bilbao':
+            if location == 'Bilbao':
                 raise GeocoderServiceError
             elif location == 'europe':
                 raise GeocoderServiceError
-            elif location == 'Trento':
-                return self.MockedLocation(46.0664228, 11.1257601)
 
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
