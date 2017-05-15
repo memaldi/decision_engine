@@ -4,7 +4,7 @@ from artifact_recommender import cdv
 from decision_engine import settings
 from geopy import geocoders
 from geopy.distance import vincenty
-from geopy.exc import GeocoderServiceError
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from collections import Counter
 import Levenshtein
 import operator
@@ -71,14 +71,14 @@ def recommend_app(user_id, lat, lon, radius):
     if -1000 in [lat, lon]:
         try:
             user_loc = geolocator.geocode(user_location)
-        except GeocoderServiceError:
+        except (GeocoderServiceError, GeocoderTimedOut):
             user_loc = None
             logger.warning('Can not connect to Geocode URL for location '
                            '{}'.format(user_location))
         if not user_loc:
             try:
                 user_loc = geolocator.geocode('europe')
-            except GeocoderServiceError:
+            except (GeocoderServiceError, GeocoderTimedOut):
                 logger.warning('Can not connect to Geocode URL for location '
                                'europe')
                 return []
@@ -106,7 +106,7 @@ def recommend_app(user_id, lat, lon, radius):
             app_point = (app_loc.latitude, app_loc.longitude)
             if vincenty(user_point, app_point).km <= radius:
                 filtered_apps.append(app)
-        except GeocoderServiceError:
+        except (GeocoderServiceError, GeocoderTimedOut):
             logger.warning('Can not connect to Geocode URL for location '
                            '{}'.format(app.scope))
 
