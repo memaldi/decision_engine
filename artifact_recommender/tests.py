@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from nltk.stem.snowball import SnowballStemmer
 from unittest.mock import patch, Mock
 from unittest import skip
+from geopy.exc import GeocoderServiceError
 import base64
 import json
 # Create your tests here.
@@ -1488,6 +1489,28 @@ class CDVTestCase(TestCase):
             elif location == 'europe':
                 return self.MockedLocation(51.0000003, 9.9999997)
 
+    class MockedExceptionUserLocationNominatim(object):
+        class MockedLocation(object):
+            def __init__(self, lat, lon):
+                self.latitude = lat
+                self.longitude = lon
+
+        def geocode(self, location):
+            if location == 'Bilbao':
+                raise GeocoderServiceError
+            elif location == 'europe':
+                return self.MockedLocation(51.0000003, 9.9999997)
+            elif location == 'Trento':
+                return self.MockedLocation(46.0664228, 11.1257601)
+
+
+    class MockedExceptionEuropeNominatim(object):
+        def geocode(self, location):
+            if location == 'Bilbao':
+                raise GeocoderServiceError
+            elif location == 'europe':
+                raise GeocoderServiceError
+
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
         user.save()
@@ -1581,6 +1604,57 @@ class CDVTestCase(TestCase):
         mocked_cdv.assert_called_with(1)
 
         self.assertCountEqual(app_list, [10, 11, 12, 13, 14])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_geocoder_exception_user_location(self, mocked_cdv):
+        for i in range(15, 20):
+            response = self.client.post(
+                '/app/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2'],
+                            'scope': 'Trento',
+                            'min_age': 13}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+
+        self.nominatim_mock.return_value = \
+            self.MockedExceptionUserLocationNominatim()
+        mocked_cdv.return_value = 35, 'Bilbao', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 10000)
+        mocked_cdv.assert_called_with(1)
+
+        self.assertCountEqual(app_list, [15, 16, 17, 18, 19])
+
+    @patch('artifact_recommender.cdv.get_user_data')
+    def test_recommend_app_geocoder_exception_europe(self, mocked_cdv):
+        for i in range(15, 20):
+            response = self.client.post(
+                '/app/',
+                json.dumps({'id': i,
+                            'lang': 'spanish',
+                            'tags': ['tag1', 'tag2'],
+                            'scope': 'Trento',
+                            'min_age': 13}),
+                content_type='application/json',
+                **{'HTTP_AUTHORIZATION': 'BASIC {}'.format(
+                    base64.b64encode('{}:{}'.format(
+                         BASIC_USER, BASIC_PASSWORD).encode()).decode())})
+            recommender.tag_similarity(i)
+
+        self.nominatim_mock.return_value = \
+            self.MockedExceptionEuropeNominatim()
+        mocked_cdv.return_value = 35, 'Bilbao', [10, 12, 11], \
+            ['soccer', 'sports', 'tennis']
+
+        app_list = recommender.recommend_app(1, -1000, -1000, 10000)
+        mocked_cdv.assert_called_with(1)
+        self.assertCountEqual(app_list, [])
 
 
 class UserAppsTestCase(TestCase):

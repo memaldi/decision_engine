@@ -4,9 +4,13 @@ from artifact_recommender import cdv
 from decision_engine import settings
 from geopy import geocoders
 from geopy.distance import vincenty
+from geopy.exc import GeocoderServiceError
 from collections import Counter
 import Levenshtein
 import operator
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def stem_tags(lang, tags):
@@ -65,9 +69,19 @@ def recommend_app(user_id, lat, lon, radius):
 
     geolocator = geocoders.Nominatim()
     if -1000 in [lat, lon]:
-        user_loc = geolocator.geocode(user_location)
+        try:
+            user_loc = geolocator.geocode(user_location)
+        except GeocoderServiceError:
+            user_loc = None
+            logger.warning('Can not connect to Geocode URL for location '
+                           '{}'.format(user_location))
         if not user_loc:
-            user_loc = geolocator.geocode('europe')
+            try:
+                user_loc = geolocator.geocode('europe')
+            except GeocoderServiceError:
+                logger.warning('Can not connect to Geocode URL for location '
+                               'europe')
+                return []
         lat = user_loc.latitude
         lon = user_loc.longitude
     user_point = (lat, lon)
@@ -79,7 +93,7 @@ def recommend_app(user_id, lat, lon, radius):
             for tag in app.tags.all():
                 used_apps_tags.append(tag.name)
         except models.Application.DoesNotExist:
-            pass
+            logger.error('Can not retrieve app {}'.format(app_id))
 
     ordered_used_tags = Counter(used_apps_tags)
     for tag in ordered_used_tags.most_common(5):
@@ -87,10 +101,14 @@ def recommend_app(user_id, lat, lon, radius):
 
     filtered_apps = []
     for app in models.Application.objects.filter(min_age__lte=user_age):
-        app_loc = geolocator.geocode(app.scope)
-        app_point = (app_loc.latitude, app_loc.longitude)
-        if vincenty(user_point, app_point).km <= radius:
-            filtered_apps.append(app)
+        try:
+            app_loc = geolocator.geocode(app.scope)
+            app_point = (app_loc.latitude, app_loc.longitude)
+            if vincenty(user_point, app_point).km <= radius:
+                filtered_apps.append(app)
+        except GeocoderServiceError:
+            logger.warning('Can not connect to Geocode URL for location '
+                           '{}'.format(app.scope))
 
     similar_apps = {}
     for app in filtered_apps:
