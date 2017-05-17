@@ -19,6 +19,7 @@ services:
         - DB_ENV_POSTGRES_USER=de
         - DB_ENV_POSTGRES_DB=de_db
         - SENTRY_DSN=''
+        - WELIVE_HOST=''
         links:
         - redis
         - db
@@ -31,6 +32,7 @@ services:
         - DB_ENV_POSTGRES_USER=de
         - DB_ENV_POSTGRES_DB=de_db
         - SENTRY_DSN=''
+        - WELIVE_HOST=''
         links:
         - redis
         - db
