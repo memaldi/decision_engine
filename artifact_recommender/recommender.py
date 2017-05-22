@@ -118,7 +118,8 @@ def recommend_app(user_id, lat, lon, radius):
             app_tags = set()
             for tag in app.tags.all():
                 app_tags.add(tag.name)
-            similarity = tags_similarity(set(user_tags), app_tags)
+            user_stemmed_tags = stem_tags(app.lang, user_tags)
+            similarity = tags_similarity(set(user_stemmed_tags), app_tags)
             if similarity > settings.RECOMENDATION_THRESHOLD:
                 similar_apps[app.id] = similarity
 
