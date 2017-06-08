@@ -42,9 +42,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_rq',
     'raven.contrib.django.raven_compat',
+    'silk',
 ]
 
 MIDDLEWARE = [
+    'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -159,3 +161,6 @@ RAVEN_CONFIG = {
     # release based on the git info.
     'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
 }
+
+# Silk settings
+SILKY_PYTHON_PROFILER = True
