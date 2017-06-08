@@ -110,7 +110,9 @@ def recommend_app(user_id, lat, lon, radius):
     for app in models.Application.objects.filter(min_age__lte=user_age):
         try:
             with silk_profile(name='Geocode for {}'.format(app.scope)):
-                app_loc = geolocator.geocode(app.scope)
+                app_loc = cache.get_or_set(
+                    'geocode:{}'.format(app.scope),
+                    geolocator.geocode(app.scope))
             app_point = (app_loc.latitude, app_loc.longitude)
             if vincenty(user_point, app_point).km <= radius:
                 filtered_apps.append(app)
