@@ -6,6 +6,7 @@ from geopy import geocoders
 from geopy.distance import vincenty
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from collections import Counter
+from silk.profiling.profiler import silk_profile
 import Levenshtein
 import operator
 import logging
@@ -69,19 +70,21 @@ def recommend_app(user_id, lat, lon, radius):
 
     geolocator = geocoders.Nominatim()
     if -1000 in [lat, lon]:
-        try:
-            user_loc = geolocator.geocode(user_location)
-        except (GeocoderServiceError, GeocoderTimedOut):
-            user_loc = None
-            logger.warning('Can not connect to Geocode URL for location '
-                           '{}'.format(user_location))
-        if not user_loc:
+        with silk_profile(name='Geocode for {}'.format(user_location)):
             try:
-                user_loc = geolocator.geocode('europe')
+                user_loc = geolocator.geocode(user_location)
             except (GeocoderServiceError, GeocoderTimedOut):
+                user_loc = None
                 logger.warning('Can not connect to Geocode URL for location '
-                               'europe')
-                return []
+                               '{}'.format(user_location))
+        with silk_profile(name='Geocode for {}'.format('europe')):
+            if not user_loc:
+                try:
+                    user_loc = geolocator.geocode('europe')
+                except (GeocoderServiceError, GeocoderTimedOut):
+                    logger.warning('Can not connect to Geocode URL for location '
+                                   'europe')
+                    return []
         lat = user_loc.latitude
         lon = user_loc.longitude
     user_point = (lat, lon)
@@ -102,7 +105,8 @@ def recommend_app(user_id, lat, lon, radius):
     filtered_apps = []
     for app in models.Application.objects.filter(min_age__lte=user_age):
         try:
-            app_loc = geolocator.geocode(app.scope)
+            with silk_profile(name='Geocode for {}'.format(app.scope)):
+                app_loc = geolocator.geocode(app.scope)
             app_point = (app_loc.latitude, app_loc.longitude)
             if vincenty(user_point, app_point).km <= radius:
                 filtered_apps.append(app)

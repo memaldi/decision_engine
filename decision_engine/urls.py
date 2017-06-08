@@ -23,3 +23,5 @@ urlpatterns = [
     url(r'^', include('artifact_recommender.urls')),
     url(r'^django-rq/', include('django_rq.urls')),
 ]
+
+urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]
