@@ -73,18 +73,21 @@ def recommend_app(user_id, lat, lon, radius):
     if -1000 in [lat, lon]:
         with silk_profile(name='Geocode for {}'.format(user_location)):
             try:
-                user_loc = cache.get_or_set(
-                    'geocode:{}'.format(user_location),
-                    geolocator.geocode(user_location))
+                user_loc = cache.get('geocode:{}'.format(user_location))
+                if user_loc is None:
+                    user_loc = geolocator.geocode(user_location)
+                    cache.set('geocode:{}'.format(user_location), user_loc)
             except (GeocoderServiceError, GeocoderTimedOut):
                 user_loc = None
                 logger.warning('Can not connect to Geocode URL for location '
                                '{}'.format(user_location))
         with silk_profile(name='Geocode for {}'.format('europe')):
-            if not user_loc:
+            if user_loc is None:
                 try:
-                    user_loc = cache.get_or_set('geocode:europe',
-                                                geolocator.geocode('europe'))
+                    user_loc = cache.get('geocode:europe')
+                    if user_loc is None:
+                        user_loc = geolocator.geocode('europe')
+                        cache.set('geocode:europe', user_loc)
                 except (GeocoderServiceError, GeocoderTimedOut):
                     logger.warning('Can not connect to Geocode URL for '
                                    'location europe')
@@ -110,9 +113,10 @@ def recommend_app(user_id, lat, lon, radius):
     for app in models.Application.objects.filter(min_age__lte=user_age):
         try:
             with silk_profile(name='Geocode for {}'.format(app.scope)):
-                app_loc = cache.get_or_set(
-                    'geocode:{}'.format(app.scope),
-                    geolocator.geocode(app.scope))
+                app_loc = cache.get('geocode:{}'.format(app.scope))
+                if app_loc is None:
+                    app_loc = geolocator.geocode(app.scope)
+                    cache.set('geocode:{}'.format(app.scope), app_loc)
             app_point = (app_loc.latitude, app_loc.longitude)
             if vincenty(user_point, app_point).km <= radius:
                 filtered_apps.append(app)
