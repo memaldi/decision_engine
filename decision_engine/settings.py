@@ -164,3 +164,14 @@ RAVEN_CONFIG = {
 
 # Silk settings
 SILKY_PYTHON_PROFILER = True
+
+# Cache config
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://django-redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
