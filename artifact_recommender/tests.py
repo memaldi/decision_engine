@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from artifact_recommender.models import Dataset, BuildingBlock, Tag
 from artifact_recommender.models import Application, Idea, Similarity
 from artifact_recommender import recommender
@@ -1438,6 +1438,7 @@ class ArtifactRecommendationTestCase(TestCase):
                               16, 17, 18, 19])
 
 
+@override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class CDVTestCase(TestCase):
 
     COMPLETE_CDV_RESPONSE = '''{

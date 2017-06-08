@@ -7,6 +7,7 @@ from geopy.distance import vincenty
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from collections import Counter
 from silk.profiling.profiler import silk_profile
+from django.core.cache import cache
 import Levenshtein
 import operator
 import logging
@@ -72,7 +73,9 @@ def recommend_app(user_id, lat, lon, radius):
     if -1000 in [lat, lon]:
         with silk_profile(name='Geocode for {}'.format(user_location)):
             try:
-                user_loc = geolocator.geocode(user_location)
+                user_loc = cache.get_or_set(
+                    'geocode:{}'.format(user_location),
+                    geolocator.geocode(user_location))
             except (GeocoderServiceError, GeocoderTimedOut):
                 user_loc = None
                 logger.warning('Can not connect to Geocode URL for location '
@@ -80,10 +83,11 @@ def recommend_app(user_id, lat, lon, radius):
         with silk_profile(name='Geocode for {}'.format('europe')):
             if not user_loc:
                 try:
-                    user_loc = geolocator.geocode('europe')
+                    user_loc = cache.get_or_set('geocode:europe',
+                                                geolocator.geocode('europe'))
                 except (GeocoderServiceError, GeocoderTimedOut):
-                    logger.warning('Can not connect to Geocode URL for location '
-                                   'europe')
+                    logger.warning('Can not connect to Geocode URL for '
+                                   'location europe')
                     return []
         lat = user_loc.latitude
         lon = user_loc.longitude
