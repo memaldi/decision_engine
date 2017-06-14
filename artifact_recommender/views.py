@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import permission_classes
+from silk.profiling.profiler import silk_profile
 # Create your views here.
 
 
@@ -204,15 +205,17 @@ class ApplicationList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
+            with silk_profile(name='Stemming tags'):
+                stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                     request.data['tags'])
             request.data['tags'] = stemmed_tags
-            for tag_name in request.data['tags']:
-                try:
-                    tag = Tag.objects.get(name=tag_name)
-                except Tag.DoesNotExist:
-                    tag = Tag(name=tag_name)
-                    tag.save()
+            with silk_profile(name='Saving tags'):
+                for tag_name in request.data['tags']:
+                    try:
+                        tag = Tag.objects.get(name=tag_name)
+                    except Tag.DoesNotExist:
+                        tag = Tag(name=tag_name)
+                        tag.save()
             serializer = serializers.ApplicationSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
