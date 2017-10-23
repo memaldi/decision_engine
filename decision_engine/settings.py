@@ -39,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'artifact_recommender',
-    # 'rest_framework',
+    'rest_framework',
     'django_rq',
-    'raven.contrib.django.raven_compat',
+    # 'raven.contrib.django.raven_compat',
     'silk',
 ]
 
