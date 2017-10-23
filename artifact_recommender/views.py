@@ -208,15 +208,17 @@ class ApplicationList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
+            with silk_profile(name='Stemming tags'):
+                stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                     request.data['tags'])
             request.data['tags'] = stemmed_tags
-            for tag_name in request.data['tags']:
-                try:
-                    tag = Tag.objects.get(name=tag_name)
-                except Tag.DoesNotExist:
-                    tag = Tag(name=tag_name)
-                    tag.save()
+            with silk_profile(name='Saving tags'):
+                for tag_name in request.data['tags']:
+                    try:
+                        tag = Tag.objects.get(name=tag_name)
+                    except Tag.DoesNotExist:
+                        tag = Tag(name=tag_name)
+                        tag.save()
             serializer = serializers.ApplicationSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
