@@ -93,6 +93,12 @@ class ArtifactRecommendation(APIView):
     def get_object(self, pk, _type):
         try:
             artifact = Artifact.objects.get(pk=pk)
+            return self.filter_type(artifact, _type)
+        except Artifact.DoesNotExist:
+            raise Http404
+
+    def filter_type(self, artifact, _type):
+        try:
             if ArtifactType(_type) == ArtifactType.DATASET:
                 artifact.dataset
             elif ArtifactType(_type) == ArtifactType.BUILDING_BLOCK:
@@ -109,27 +115,30 @@ class ArtifactRecommendation(APIView):
         try:
             artifact = self.get_object(pk, source)
             with silk_profile("Get similarity"):
-                similarity = Similarity.objects.filter(
-                    Q(source_artifact=artifact) |
-                    Q(target_artifact=artifact)).order_by(
-                        '-value')
+                if ArtifactType(target) == ArtifactType.ARTIFACT:
+                    similarity = Similarity.objects.filter(
+                        Q(source_artifact=artifact) |
+                        Q(target_artifact=artifact)) \
+                            .order_by('-value')
+                else:
+                    if target == 'app':
+                        target = 'application'
+                    similarity = Similarity.objects.filter(
+                        Q(source_artifact=artifact,
+                          **{'target_artifact__' + target + '__isnull':
+                             False}) |
+                        Q(target_artifact=artifact,
+                          **{'source_artifact__' + target + '__isnull':
+                             False})).order_by('-value')
             similar_datasets = []
             with silk_profile("Similarity loop"):
                 for sim in similarity:
                     if sim.source_artifact.id == artifact.id:
-                        try:
-                            self.get_object(sim.target_artifact.id, target)
-                            similar_datasets.append(sim.target_artifact.id)
-                        except (Artifact.DoesNotExist, Http404):
-                            pass
+                        similar_datasets.append(sim.target_artifact.id)
                     else:
-                        try:
-                            self.get_object(sim.source_artifact.id, target)
-                            similar_datasets.append(sim.source_artifact.id)
-                        except (Artifact.DoesNotExist, Http404):
-                            pass
+                        similar_datasets.append(sim.source_artifact.id)
             return Response(similar_datasets)
-        except ValueError:
+        except ValueError as e:
             return HttpResponseBadRequest("Bad request. Is the URL correct?")
 
 
