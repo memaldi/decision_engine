@@ -34,8 +34,9 @@ class DatasetList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
+            with silk_profile("Stem tags"):
+                stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                     request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
@@ -67,8 +68,9 @@ class DatasetDetail(APIView):
 
     def put(self, request, pk, format=None):
         dataset = self.get_object(pk)
-        stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                             request.data['tags'])
+        with silk_profile("Stem tags"):
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
@@ -152,8 +154,9 @@ class BuildingBlockList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
+            with silk_profile("Stem tags"):
+                stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                     request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
@@ -185,8 +188,9 @@ class BuildingBlockDetail(APIView):
 
     def put(self, request, pk, format=None):
         building_block = self.get_object(pk)
-        stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                             request.data['tags'])
+        with silk_profile("Stem tags"):
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
@@ -284,11 +288,9 @@ class IdeaList(APIView):
 
     def post(self, request, format=None):
         with transaction.atomic():
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
-            request.data['tags'] = stemmed_tags
-            stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                                 request.data['tags'])
+            with silk_profile("Stem tags"):
+                stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                     request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
                 try:
@@ -320,8 +322,9 @@ class IdeaDetail(APIView):
 
     def put(self, request, pk, format=None):
         idea = self.get_object(pk)
-        stemmed_tags = recommender.stem_tags(request.data['lang'],
-                                             request.data['tags'])
+        with silk_profile("Stem tags"):
+            stemmed_tags = recommender.stem_tags(request.data['lang'],
+                                                 request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
             try:
