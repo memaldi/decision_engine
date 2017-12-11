@@ -1,17 +1,18 @@
-from artifact_recommender.models import Dataset, Tag, BuildingBlock, Artifact
-from artifact_recommender.models import Application, Idea, Similarity
-from artifact_recommender import serializers
-from artifact_recommender import recommender
-from django.http import Http404, HttpResponseBadRequest
+from enum import Enum
+
+from artifact_recommender import recommender, serializers
+from artifact_recommender.models import (Application, Artifact, BuildingBlock,
+                                         Dataset, Idea, Similarity, Tag)
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
-from enum import Enum
-from rest_framework import status
+from django.http import Http404, HttpResponseBadRequest
 from rest_framework import serializers as rest_serializers
+from rest_framework import status
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.decorators import permission_classes
 from silk.profiling.profiler import silk_profile
 
 # Create your views here.
@@ -39,11 +40,11 @@ class DatasetList(APIView):
                                                      request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
-                try:
-                    tag = Tag.objects.get(name=tag_name)
-                except Tag.DoesNotExist:
-                    tag = Tag(name=tag_name)
-                    tag.save()
+                if not cache.get('tag:{}'.format(tag_name)):
+                    if not Tag.objects.filter(name=tag_name).exists():
+                        tag = Tag(name=tag_name)
+                        tag.save()
+                        cache.set('tag:{}'.format(tag_name), tag.id)
             serializer = serializers.DatasetSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -73,11 +74,11 @@ class DatasetDetail(APIView):
                                                  request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
-            try:
-                Tag.objects.get(name=tag_name)
-            except Tag.DoesNotExist:
-                tag = Tag(name=tag_name)
-                tag.save()
+            if not cache.get('tag:{}'.format(tag_name)):
+                if not Tag.objects.filter(name=tag_name).exists():
+                    tag = Tag(name=tag_name)
+                    tag.save()
+                    cache.set('tag:{}'.format(tag_name), tag.id)
         serializer = serializers.DatasetSerializer(dataset, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -159,11 +160,11 @@ class BuildingBlockList(APIView):
                                                      request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
-                try:
-                    tag = Tag.objects.get(name=tag_name)
-                except Tag.DoesNotExist:
-                    tag = Tag(name=tag_name)
-                    tag.save()
+                if not cache.get('tag:{}'.format(tag_name)):
+                    if not Tag.objects.filter(name=tag_name).exists():
+                        tag = Tag(name=tag_name)
+                        tag.save()
+                        cache.set('tag:{}'.format(tag_name), tag.id)
             serializer = serializers.BuildingBlockSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -193,11 +194,11 @@ class BuildingBlockDetail(APIView):
                                                  request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
-            try:
-                Tag.objects.get(name=tag_name)
-            except Tag.DoesNotExist:
-                tag = Tag(name=tag_name)
-                tag.save()
+            if not cache.get('tag:{}'.format(tag_name)):
+                if not Tag.objects.filter(name=tag_name).exists():
+                    tag = Tag(name=tag_name)
+                    tag.save()
+                    cache.set('tag:{}'.format(tag_name), tag.id)
         serializer = serializers.BuildingBlockSerializer(building_block,
                                                          data=request.data)
         if serializer.is_valid():
@@ -227,11 +228,11 @@ class ApplicationList(APIView):
             request.data['tags'] = stemmed_tags
             with silk_profile(name='Saving tags'):
                 for tag_name in request.data['tags']:
-                    try:
-                        tag = Tag.objects.get(name=tag_name)
-                    except Tag.DoesNotExist:
-                        tag = Tag(name=tag_name)
-                        tag.save()
+                    if not cache.get('tag:{}'.format(tag_name)):
+                        if not Tag.objects.filter(name=tag_name).exists():
+                            tag = Tag(name=tag_name)
+                            tag.save()
+                            cache.set('tag:{}'.format(tag_name), tag.id)
             serializer = serializers.ApplicationSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -260,11 +261,11 @@ class ApplicationDetail(APIView):
                                              request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
-            try:
-                Tag.objects.get(name=tag_name)
-            except Tag.DoesNotExist:
-                tag = Tag(name=tag_name)
-                tag.save()
+            if not cache.get('tag:{}'.format(tag_name)):
+                if not Tag.objects.filter(name=tag_name).exists():
+                    tag = Tag(name=tag_name)
+                    tag.save()
+                    cache.set('tag:{}'.format(tag_name), tag.id)
         serializer = serializers.ApplicationSerializer(application,
                                                        data=request.data)
         if serializer.is_valid():
@@ -293,11 +294,11 @@ class IdeaList(APIView):
                                                      request.data['tags'])
             request.data['tags'] = stemmed_tags
             for tag_name in request.data['tags']:
-                try:
-                    tag = Tag.objects.get(name=tag_name)
-                except Tag.DoesNotExist:
-                    tag = Tag(name=tag_name)
-                    tag.save()
+                if not cache.get('tag:{}'.format(tag_name)):
+                    if not Tag.objects.filter(name=tag_name).exists():
+                        tag = Tag(name=tag_name)
+                        tag.save()
+                        cache.set('tag:{}'.format(tag_name), tag.id)
             serializer = serializers.IdeaSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -327,11 +328,11 @@ class IdeaDetail(APIView):
                                                  request.data['tags'])
         request.data['tags'] = stemmed_tags
         for tag_name in request.data['tags']:
-            try:
-                Tag.objects.get(name=tag_name)
-            except Tag.DoesNotExist:
-                tag = Tag(name=tag_name)
-                tag.save()
+            if not cache.get('tag:{}'.format(tag_name)):
+                if not Tag.objects.filter(name=tag_name).exists():
+                    tag = Tag(name=tag_name)
+                    tag.save()
+                    cache.set('tag:{}'.format(tag_name), tag.id)
         serializer = serializers.IdeaSerializer(idea, data=request.data)
         if serializer.is_valid():
             serializer.save()

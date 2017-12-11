@@ -5,9 +5,7 @@ from artifact_recommender import recommender
 from artifact_recommender import cdv
 from decision_engine import settings
 from django.contrib.auth.models import User
-from nltk.stem.snowball import SnowballStemmer
-from unittest.mock import patch, Mock
-from unittest import skip
+from unittest.mock import patch
 from geopy.exc import GeocoderServiceError
 import base64
 import json
@@ -112,6 +110,8 @@ class ArtifactTestCase(TestCase):
             '<Tag: tag1>]>\n')
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class BuildingBlockTestCase(TestCase):
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
@@ -339,6 +339,8 @@ class BuildingBlockTestCase(TestCase):
         self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class DatasetTestCase(TestCase):
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
@@ -566,6 +568,8 @@ class DatasetTestCase(TestCase):
         self.assertListEqual(response_json['tags'], ['tag1', 'tag2'])
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class ApplicationTestCase(TestCase):
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
@@ -820,6 +824,8 @@ class ApplicationTestCase(TestCase):
         self.assertEqual(response_json['min_age'], 13)
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class IdeaTestCase(TestCase):
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
@@ -1056,6 +1062,8 @@ class MockedStemmer():
         return 'stemmed_tag'
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class TestRecommender(TestCase):
     def setUp(self):
         self.rq_patcher = patch('django_rq.enqueue')
@@ -1262,6 +1270,8 @@ class TestRecommender(TestCase):
              '4444 - 4448: 0.5'])
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class ArtifactRecommendationTestCase(TestCase):
     def setUp(self):
         user = User.objects.create_user(BASIC_USER, password=BASIC_PASSWORD)
